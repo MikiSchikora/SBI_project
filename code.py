@@ -13,19 +13,19 @@ print(chains)
 print(dir(chains))
 
 for chain in chains:
-	print(dir(chain))
-	if chain.get_id() == 'B':
-		AB = list(chain.get_atoms())
-	if chain.get_id() == 'B':
-		BC = list(chain.get_atoms())
+   print(dir(chain))
+   if chain.get_id() == 'B':
+      AB = list(chain.get_atoms())
+   if chain.get_id() == 'B':
+      BC = list(chain.get_atoms())
 
 #print(AB)
 
 for atom in AB:
-	#print(dir(atom))
-	print(atom.get_coord())
-	break
-    #print(atom)
+   #print(dir(atom))
+   print(atom.get_coord())
+   break
+   #print(atom)
 
 
 sup = Superimposer()
@@ -41,8 +41,8 @@ sup.apply(BC)
 
 io = PDBIO()
 for atom in BC:
-	print(type(atom))
-	io.set_structure(atom)
+   print(type(atom))
+   io.set_structure(atom)
 io.save('out.pdb')
 
 #print(residuesBC)
