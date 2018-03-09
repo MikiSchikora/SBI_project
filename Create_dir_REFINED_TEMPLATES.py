@@ -43,9 +43,3 @@ out_fd = open("PDB_info.p", "wb")
 pickle.dump(PDB_info, out_fd)
 out_fd.close()
 
-
-
-
-
-
-   print(file)
