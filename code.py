@@ -1,10 +1,21 @@
 import Bio.PDB as pdb
 
+
+# argument parser
+# input
+# output
+# verbose
+
+# if input is a single pdb and we want to split it
+
+
+
+
 # initialise PDB files parser
 p = pdb.PDBParser(PERMISSIVE=1)
 
 # parse file 1 and 2 and get a structure for each
-filename1 = "PAIR_AB.pdb"
+filename1 = "TEMPLATES/A_and_B.pdb"
 structure1 = p.get_structure("pr1", filename1)
 filename2 = "PAIR_AC.pdb"
 structure2 = p.get_structure("pr2", filename2)
