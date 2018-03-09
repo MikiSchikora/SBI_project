@@ -6,14 +6,44 @@
       <change beforePath="$PROJECT_DIR$/Create_dir_REFINED_TEMPLATES.py" afterPath="$PROJECT_DIR$/Create_dir_REFINED_TEMPLATES.py" />
       <change beforePath="$PROJECT_DIR$/Generate_pairwise_interactions.py" afterPath="$PROJECT_DIR$/Generate_pairwise_interactions.py" />
       <change beforePath="$PROJECT_DIR$/PDB_info.p" afterPath="$PROJECT_DIR$/PDB_info.p" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/A_and_B.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/A_and_B.pdb" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/B_and_A.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/B_and_A.pdb" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/C_and_D.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/C_and_D.pdb" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/D_and_C.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/D_and_C.pdb" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/E_and_F.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/E_and_F.pdb" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/F_and_E.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/F_and_E.pdb" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/G_and_H.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/G_and_H.pdb" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/H_and_G.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/H_and_G.pdb" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/A_and_D.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/A_and_F.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/A_and_H.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/B_and_A.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/B_and_C.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/B_and_E.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/B_and_F.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/C_and_A.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/C_and_B.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/D_and_A.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/D_and_B.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/D_and_C.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/D_and_E.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/D_and_H.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/E_and_A.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/E_and_B.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/E_and_C.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/E_and_D.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/E_and_H.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/F_and_A.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/F_and_B.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/F_and_C.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/F_and_D.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/F_and_E.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/F_and_G.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/G_and_A.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/G_and_B.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/G_and_C.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/G_and_D.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/G_and_E.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/G_and_F.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/H_and_A.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/H_and_B.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/H_and_C.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/H_and_D.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/H_and_E.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/H_and_F.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/H_and_G.pdb" afterPath="" />
       <change beforePath="$PROJECT_DIR$/chain.pdb" afterPath="" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -31,8 +61,18 @@
       <file leaf-file-name="Create_dir_REFINED_TEMPLATES.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Create_dir_REFINED_TEMPLATES.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="234">
-              <caret line="24" column="19" lean-forward="true" selection-start-line="24" selection-start-column="19" selection-end-line="24" selection-end-column="19" />
+            <state relative-caret-position="285">
+              <caret line="21" column="0" lean-forward="false" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Generate_pairwise_interactions.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Generate_pairwise_interactions.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="276">
+              <caret line="59" column="40" lean-forward="false" selection-start-line="59" selection-start-column="40" selection-end-line="59" selection-end-column="40" />
               <folding />
             </state>
           </provider>
@@ -359,18 +399,16 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Generate_pairwise_interactions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="379">
-          <caret line="67" column="55" lean-forward="false" selection-start-line="67" selection-start-column="55" selection-end-line="67" selection-end-column="55" />
-          <folding>
-            <element signature="e#99#120#0" expanded="false" />
-          </folding>
+        <state relative-caret-position="276">
+          <caret line="59" column="40" lean-forward="false" selection-start-line="59" selection-start-column="40" selection-end-line="59" selection-end-column="40" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Create_dir_REFINED_TEMPLATES.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="234">
-          <caret line="24" column="19" lean-forward="true" selection-start-line="24" selection-start-column="19" selection-end-line="24" selection-end-column="19" />
+        <state relative-caret-position="285">
+          <caret line="21" column="0" lean-forward="false" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
           <folding />
         </state>
       </provider>

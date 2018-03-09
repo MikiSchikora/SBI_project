@@ -27,14 +27,14 @@ for chain1 in model.get_chains():
 
    for chain2 in model.get_chains():
 
-      #comb = chain1.id+'.'+chain2.id
-      #comb_rev = chain2.id+'.'+chain1.id
+      comb = chain1.id+'.'+chain2.id
+      comb_rev = chain2.id+'.'+chain1.id
 
-      if chain1 is not chain2:
+      if chain1 is not chain2 and comb not in saved_pairs:
 
          # save the combination
-         #saved_pairs.add(comb)
-         #saved_pairs.add(comb_rev)
+         saved_pairs.add(comb)
+         saved_pairs.add(comb_rev)
 
          # ask if any of the residues is interacting, if so save the PDB
 
@@ -51,7 +51,7 @@ for chain1 in model.get_chains():
                   except KeyError:
                      ## no CA atom, e.g. for H_NAG
                      continue
-                  if distance < 15:
+                  if distance < 10:
                      chains_interacting = 1
 
          if chains_interacting==1:
