@@ -5,6 +5,7 @@
 
 import Bio.PDB as pdb
 import os
+import pickle
 
 List_PDBs = os.listdir('./TEMPLATES/')
 print('hi')
