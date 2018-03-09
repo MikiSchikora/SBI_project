@@ -1,48 +1,35 @@
-from Bio.PDB import *
+import Bio.PDB as pdb
 
-p = PDBParser(PERMISSIVE=1)
-filename = "3kuy.pdb"
-structure = p.get_structure("3kuy", filename)
+p = pdb.PDBParser(PERMISSIVE=1)
 
-print(dir(structure))
-print(type(structure))
+# parse file 1 and 2 and get a structure for each
+filename1 = "PAIR_AB.pdb"
+structure1 = p.get_structure("pr1", filename1)
+filename2 = "PAIR_AC.pdb"
+structure2 = p.get_structure("pr2", filename2)
 
+# same chain is retrieved from the 2 structures. Example: chain A
+modelAfromAB=structure1[0]['A']
+modelAfromAC=structure2[0]['A']
 
-chains = structure.get_chains()
-print(chains)
-print(dir(chains))
+# get the atoms of the common chain in a list
+atomsAfromAB=list(modelAfromAB['A'].get_atoms())
+atomsAfromAC=list(modelAfromAC['A'].get_atoms())
 
-for chain in chains:
-   print(dir(chain))
-   if chain.get_id() == 'B':
-      AB = list(chain.get_atoms())
-   if chain.get_id() == 'B':
-      BC = list(chain.get_atoms())
-
-#print(AB)
-
-for atom in AB:
-   #print(dir(atom))
-   print(atom.get_coord())
-   break
-   #print(atom)
-
-
-sup = Superimposer()
+# use the Superimposer
+sup = pdb.Superimposer()
 
 # first argument is fixed, second is moving. both are lists of Atom objects
-sup.set_atoms(AB,BC)
+sup.set_atoms(atomsAfromAB,atomsAfromAC)
 print(sup.rotran)
 print(sup.rms)
 
 # rotate moving atoms
-sup.apply(BC)
+sup.apply(list(modelAfromAC['C'].get_atoms()))
 
+structure1[0].add(structure2[0]['C'])
 
-io = PDBIO()
-for atom in BC:
-   print(type(atom))
-   io.set_structure(atom)
-io.save('out.pdb')
+io = pdb.PDBIO()
+io.set_structure(structure1)
+io.save('out1.pdb')
 
-#print(residuesBC)
