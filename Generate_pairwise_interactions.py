@@ -5,6 +5,7 @@
 import Bio.PDB as pdb
 from Bio.PDB import Structure as pdb_struct
 from Bio.PDB import Model as pdb_model
+import numpy as np
 import os
 
 parser = pdb.PDBParser(PERMISSIVE=1)
@@ -53,6 +54,12 @@ for chain1 in model.get_chains():
             new_structure.add(new_model)
 
             # move the coordinates of the structure to simulate what would happen if they were coming from different files
+
+            rotation = np.random.rand(3,3)
+            translation = np.array((0, 0, 1), 'f')
+
+            for atom in new_structure.get_atoms():
+               atom.transform(rotation, translation)
 
             # write to new pdb:
 
