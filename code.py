@@ -1,5 +1,6 @@
 import Bio.PDB as pdb
 
+# initialise PDB files parser
 p = pdb.PDBParser(PERMISSIVE=1)
 
 # parse file 1 and 2 and get a structure for each
@@ -9,12 +10,12 @@ filename2 = "PAIR_AC.pdb"
 structure2 = p.get_structure("pr2", filename2)
 
 # same chain is retrieved from the 2 structures. Example: chain A
-modelAfromAB=structure1[0]['A']
-modelAfromAC=structure2[0]['A']
+chainAfromAB=structure1[0]['A']
+chainAfromAC=structure2[0]['A']
 
 # get the atoms of the common chain in a list
-atomsAfromAB=list(modelAfromAB['A'].get_atoms())
-atomsAfromAC=list(modelAfromAC['A'].get_atoms())
+atomsAfromAB=list(chainAfromAB.get_atoms())
+atomsAfromAC=list(chainAfromAC.get_atoms())
 
 # use the Superimposer
 sup = pdb.Superimposer()
@@ -25,10 +26,12 @@ print(sup.rotran)
 print(sup.rms)
 
 # rotate moving atoms
-sup.apply(list(modelAfromAC['C'].get_atoms()))
+sup.apply(list(structure2[0]['C'].get_atoms()))
 
+# add to the fixed structure, the moved chain
 structure1[0].add(structure2[0]['C'])
 
+# save in a pdb file
 io = pdb.PDBIO()
 io.set_structure(structure1)
 io.save('out1.pdb')
