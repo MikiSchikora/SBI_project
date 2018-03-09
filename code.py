@@ -6,7 +6,7 @@ import Bio.PDB as pdb
 # output
 # verbose
 
-#
+# if input is a single pdb and we want to split it
 
 
 
