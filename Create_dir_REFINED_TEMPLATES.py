@@ -1,4 +1,4 @@
-# this script takes the pdbs in TEMPLATES/ and creates an information dictionary
+# this script takes the pdbs in TEMPLATES/ and creates an information dictionary about them
 
 # We assume that each of the provided PDBs will have always two chains (some of them being the same molecule (a homodimer))
 
@@ -39,7 +39,9 @@ for file in List_PDBs:
 
    PDB_info[file] = Chains_dict
 
-
+out_fd = open("PDB_info.p", "wb")
+pickle.dump(PDB_info, out_fd)
+out_fd.close()
 
 
 

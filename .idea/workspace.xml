@@ -3,31 +3,32 @@
   <component name="ChangeListManager">
     <list default="true" id="a1c11485-0eb0-4607-b4c6-6f4ac04babda" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change beforePath="$PROJECT_DIR$/Create_dir_REFINED_TEMPLATES.py" afterPath="$PROJECT_DIR$/Create_dir_REFINED_TEMPLATES.py" />
       <change beforePath="$PROJECT_DIR$/Generate_pairwise_interactions.py" afterPath="$PROJECT_DIR$/Generate_pairwise_interactions.py" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/A_and_B.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/A_and_B.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/A_and_B.pdb" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/A_and_E.pdb" afterPath="" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/A_and_G.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/B_and_A.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/B_and_A.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/B_and_A.pdb" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/B_and_G.pdb" afterPath="" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/B_and_H.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/C_and_D.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/C_and_D.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/C_and_D.pdb" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/C_and_E.pdb" afterPath="" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/C_and_F.pdb" afterPath="" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/C_and_G.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/D_and_C.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/D_and_C.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/D_and_C.pdb" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/D_and_F.pdb" afterPath="" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/E_and_A.pdb" afterPath="" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/E_and_C.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/E_and_F.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/E_and_F.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/E_and_F.pdb" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/F_and_C.pdb" afterPath="" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/F_and_D.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/F_and_E.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/F_and_E.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/F_and_E.pdb" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/G_and_A.pdb" afterPath="" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/G_and_B.pdb" afterPath="" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/G_and_C.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/G_and_H.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/G_and_H.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/G_and_H.pdb" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/H_and_B.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/H_and_G.pdb" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATES/H_and_G.pdb" afterPath="$PROJECT_DIR$/TEMPLATES/H_and_G.pdb" />
       <change beforePath="$PROJECT_DIR$/TEMPLATES/Icon&#13;" afterPath="" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -42,23 +43,23 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="Create_dir_REFINED_TEMPLATES.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Create_dir_REFINED_TEMPLATES.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Create_dir_REFINED_TEMPLATES.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="480">
-              <caret line="32" column="25" lean-forward="false" selection-start-line="32" selection-start-column="25" selection-end-line="32" selection-end-column="25" />
+            <state relative-caret-position="343">
+              <caret line="45" column="0" lean-forward="true" selection-start-line="45" selection-start-column="0" selection-end-line="45" selection-end-column="0" />
               <folding>
-                <element signature="e#208#229#0" expanded="true" />
+                <element signature="e#219#240#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Generate_pairwise_interactions.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Generate_pairwise_interactions.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Generate_pairwise_interactions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
-              <caret line="58" column="47" lean-forward="false" selection-start-line="58" selection-start-column="47" selection-end-line="58" selection-end-column="47" />
+            <state relative-caret-position="915">
+              <caret line="61" column="43" lean-forward="true" selection-start-line="61" selection-start-column="43" selection-end-line="61" selection-end-column="43" />
               <folding>
                 <element signature="e#99#120#0" expanded="true" />
               </folding>
@@ -75,9 +76,9 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/Example.py" />
-        <option value="$PROJECT_DIR$/Create_dir_REFINED_TEMPLATES.py" />
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/Generate_pairwise_interactions.py" />
+        <option value="$PROJECT_DIR$/Create_dir_REFINED_TEMPLATES.py" />
       </list>
     </option>
   </component>
@@ -378,16 +379,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Create_dir_REFINED_TEMPLATES.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="480">
-          <caret line="32" column="25" lean-forward="false" selection-start-line="32" selection-start-column="25" selection-end-line="32" selection-end-column="25" />
-          <folding>
-            <element signature="e#208#229#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/.idea/workspace.xml">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -398,10 +389,20 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Generate_pairwise_interactions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="58" column="47" lean-forward="false" selection-start-line="58" selection-start-column="47" selection-end-line="58" selection-end-column="47" />
+        <state relative-caret-position="915">
+          <caret line="61" column="43" lean-forward="true" selection-start-line="61" selection-start-column="43" selection-end-line="61" selection-end-column="43" />
           <folding>
             <element signature="e#99#120#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Create_dir_REFINED_TEMPLATES.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="343">
+          <caret line="45" column="0" lean-forward="true" selection-start-line="45" selection-start-column="0" selection-end-line="45" selection-end-column="0" />
+          <folding>
+            <element signature="e#219#240#0" expanded="true" />
           </folding>
         </state>
       </provider>
