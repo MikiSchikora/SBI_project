@@ -7,7 +7,7 @@ import Bio.PDB as pdb
 
 # Parse the input arguments:
 
-input_f = "./3kuy.pdb"
+input_f = './TEMPLATES/' #"./3kuy.pdb"
 output = './output.pdb'
 
 stoichiometry_file = './stoch.tbl'  # a file containing information about the stoichiometry. This is mandatory
@@ -22,7 +22,7 @@ if os.path.isfile(input_f):
 
    if input_f.split('.')[-1] != 'pdb':
       raise EnvironmentError('The provided complex has to be a PDB file')
-   
+
    Templates_dir = './TEMPLATES/'
 
    func.Generate_pairwise_subunits_from_pdb(input_f,Templates_dir)
@@ -38,47 +38,63 @@ else:
 # generate info about the Templates
 # PDB_info information about the unique chains: Keys: filename, Values: {Chain: unique ID}
 # Uniq_seqs is a set with all the unique IDs
-
 PDB_info, Uniq_seqs = func.Generate_PDB_info(Templates_dir,subunits_seq_file)
 
-m
+
 # initialise PDB files parser
 p = pdb.PDBParser(PERMISSIVE=1)
 
 # parse file 1 and 2 and get a structure for each
-filename1 = "TEMPLATES/A_and_B.pdb"
-structure1 = p.get_structure("pr1", filename1)
+for filename1 in os.listdir(Templates_dir):
+   # we start with the structure of the first pairwise interaction, this is now the current model
+   current_structure = p.get_structure("pr1", Templates_dir+filename1) 
+   current_chains=PDB_info[filename1]
 
-common_chain='A'
-for filename2 in os.listdir('TEMPLATES'):
-   if filename2.startswith(common_chain) and filename2[6] != 'B':
-      structure2 = p.get_structure("pr2", "TEMPLATES/"+filename2)
+   # iterate through the chains of the current model
+   for common_chain1, common_id in current_chains.items():
 
-      rotating_chain = filename2[6]
+      # check if another file has this chain
+      for filename2 in os.listdir(Templates_dir):
+         # this file needs to be different from the first and also have a subunit in common with it
+         rotating_chain=None
+         if filename2 != filename1 and common_id in PDB_info[filename2].values():
 
-      # same chain is retrieved from the 2 structures. Example: chain A
-      common_chain_s1 = structure1[0][common_chain]
-      common_chain_s2 = structure2[0][common_chain]
+            structure2 = p.get_structure("pr2", Templates_dir+filename2)
 
-      # get the atoms of the common chain in a list
-      common_chain_atoms_s1 = list(common_chain_s1.get_atoms())
-      common_chain_atoms_s2 = list(common_chain_s2.get_atoms())
+            # label the two chains as common (if equal id as previous chain) or rotating
+            for other_chain, other_id in PDB_info[filename2].items():
+               if other_id != common_id:
+                  rotating_chain = other_chain
+               else:
+                  common_chain2 = other_chain
 
-      # use the Superimposer
-      sup = pdb.Superimposer()
+            # if this is an homodimer, the first chain is set to be the rotating
+            if list(PDB_info[filename2].values())[0] == list(PDB_info[filename2].values())[1]:
+               rotating_chain=list(PDB_info[filename2])[0]
 
-      # first argument is fixed, second is moving. both are lists of Atom objects
-      sup.set_atoms(common_chain_atoms_s1, common_chain_atoms_s2)
-      print(sup.rotran)
-      print(sup.rms)
+            # same chain is retrieved from the 2 structures. Example: chain A
+            common_chain_s1 = current_structure[0][common_chain1]
+            common_chain_s2 = structure2[0][common_chain2]
 
-      # rotate moving atoms
-      sup.apply(list(structure2[0][rotating_chain].get_atoms()))
+            # get the atoms of the common chain in a list
+            common_chain_atoms_s1 = list(common_chain_s1.get_atoms())
+            common_chain_atoms_s2 = list(common_chain_s2.get_atoms())
 
-      # add to the fixed structure, the moved chain
-      structure1[0].add(structure2[0][rotating_chain])
+            # use the Superimposer
+            sup = pdb.Superimposer()
 
-      # save in a pdb file
-      io = pdb.PDBIO()
-      io.set_structure(structure1)
-      io.save('out1.pdb')
+            # first argument is fixed, second is moving. both are lists of Atom objects
+            sup.set_atoms(common_chain_atoms_s1, common_chain_atoms_s2)
+            print(sup.rotran)
+            print(sup.rms)
+
+            # rotate moving atoms
+            sup.apply(list(structure2[0][rotating_chain].get_atoms()))
+
+            # add to the fixed structure, the moved chain
+            current_structure[0].add(structure2[0][rotating_chain])
+
+            # save in a pdb file
+            io = pdb.PDBIO()
+            io.set_structure(current_structure)
+            io.save('out1.pdb')

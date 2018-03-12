@@ -92,7 +92,7 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path,Templates_dir):
                io.set_structure(new_structure)
                io.save(TEMPLATES_path+ID+'.pdb')
 
-def Generate_PDB_info(Templates_dir,subunits_seq_file, min_identity_between_chains = 90):
+def Generate_PDB_info(Templates_dir,subunits_seq_file, min_identity_between_chains = 30):
 
    """This function takes the Templates_dir and creates a dictionary with information about each template
 
