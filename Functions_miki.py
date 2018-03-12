@@ -14,7 +14,7 @@ import random
 import string
 
 
-def Generate_pairwise_subunits_from_pdb(pdb_file_path):
+def Generate_pairwise_subunits_from_pdb(pdb_file_path,Templates_dir):
 
    """This function takes an existing complex and fragments it into each of the pairwise interactions between subunits.
 
@@ -22,7 +22,7 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path):
 
    It does not consider nucleic acid sequences, as this is only for testing the program on different complexes"""
 
-   TEMPLATES_path = './TEMPLATES/'
+   TEMPLATES_path = Templates_dir
 
    parser = pdb.PDBParser(PERMISSIVE=1)
 
@@ -64,7 +64,7 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path):
                      except KeyError:
                         ## no CA atom, e.g. for H_NAG
                         continue
-                     if distance < 20:
+                     if distance < 10:
                         chains_interacting = 1
 
             if chains_interacting==1:
@@ -119,7 +119,7 @@ def Generate_PDB_info(Templates_dir,subunits_seq_file, min_identity_between_chai
 
       path = Templates_dir+file
       chains = list(parser.get_structure('structure', path).get_chains())
-      Chains_dict = {}
+      Chains_dict = {} # wll contain the unique ID for each chain
 
       for chain in chains:
          aaSeq = "".join([str(x.get_sequence()) for x in ppb.build_peptides(chain)])
@@ -128,30 +128,28 @@ def Generate_PDB_info(Templates_dir,subunits_seq_file, min_identity_between_chai
 
          Seq_id = None
          Best_identity = min_identity_between_chains
-         valid_file = 0
 
-         for id in Seqs.keys():
+         for my_id in Seqs.keys():
 
-            alignment = pairwise2.align.globalxx(aaSeq, Seqs[id])
-            percent_match = (alignment[0][2] / len(min(aaSeq, Seqs[id]))) * 100
+            alignment = pairwise2.align.globalxx(aaSeq, Seqs[my_id])
+            percent_match = (alignment[0][2] / len(min(aaSeq, Seqs[my_id]))) * 100
 
             if percent_match > Best_identity:
-               valid_file = 1
-               Seq_id = id
+               Seq_id = my_id
                Best_identity = percent_match
 
          # if it doesn't fit anything, it may be DNA or RNA, noty included in the provided fasta file
 
          if Seq_id is None and all(i in 'ACUTG' for i in aaSeq):
-            valid_file = 1
             Seq_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6)) #random ID
             Seqs[Seq_id] = aaSeq
 
-         if valid_file==0:
+         if Seq_id is None:
             print(file+" contains non provided and non acid nucleic sequences!!")
             break
 
-         Chains_dict[chain.id] = Seq_id
+         else:
+            Chains_dict[chain.id] = Seq_id
 
       PDB_info[file] = Chains_dict
 
