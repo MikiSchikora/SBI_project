@@ -156,3 +156,56 @@ def Generate_PDB_info(Templates_dir,subunits_seq_file, min_identity_between_chai
    return PDB_info, set(Seqs.keys())
 
 
+
+
+def superimpose_and_rotate(common_chain1, common_chain2, rotating_chain, current_structure, structure2):
+   # same chain is retrieved from the 2 structures. Example: chain A
+   common_chain_s1 = current_structure[0][common_chain1]
+   common_chain_s2 = structure2[0][common_chain2]
+
+
+   res_chain1 = [x.get_id()[1] for x in common_chain_s1.get_residues()]
+   res_chain2 = [x.get_id()[1] for x in common_chain_s2.get_residues()]
+
+   # get the atoms of the common chain in a list, where ONLY common RESIDUES are!
+   common_chain_res_s1 = [x for x in common_chain_s1.get_residues() if x.get_id()[1] in res_chain2]
+   common_chain_res_s2 = [x for x in common_chain_s2.get_residues() if x.get_id()[1] in res_chain1]
+
+   print(type(common_chain_res_s1))
+
+   print(len(common_chain_res_s1))
+   print(len(common_chain_res_s2))
+
+
+   common_chain_atoms_s1=[]
+   common_chain_atoms_s2=[]
+   for res in common_chain_res_s1:
+      for atom in res.get_atoms():
+         common_chain_atoms_s1.append(atom)
+   for res in common_chain_res_s2:
+      for atom in res.get_atoms():
+         common_chain_atoms_s2.append(atom)
+
+
+
+   # use the Superimposer
+   sup = pdb.Superimposer()
+
+   # first argument is fixed, second is moving. both are lists of Atom objects
+   sup.set_atoms(common_chain_atoms_s1, common_chain_atoms_s2)
+   print(sup.rotran)
+   print(sup.rms)
+
+   # rotate moving atoms
+   sup.apply(list(structure2[0][rotating_chain].get_atoms()))
+
+
+   # add to the fixed structure, the moved chain
+   if rotating_chain not in current_structure[0]:
+      current_structure[0].add(structure2[0][rotating_chain])
+   else:
+      print("problem: intentant afegir una cadena amb un id q ja hi es")
+
+   #exit(0)
+
+   return current_structure
