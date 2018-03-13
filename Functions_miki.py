@@ -154,7 +154,7 @@ def Generate_new_PDBs_and_info(Templates_dir,subunits_seq_file, min_identity_bet
             break
 
          else:
-            ID_new = str(chain.id+"a")
+            ID_new = str(chain.id+"|||"+Seq_id)
             Chain_IDs.append(ID_new)
 
       PDB_info[file] = Chain_IDs
