@@ -174,7 +174,7 @@ def get_atom_list_from_res_list(reslist):
     return atomlist
 
 
-def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, struct2):
+def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, struct2, added):
     # all residues from same chain (common chain) are retrieved from the 2 structures. Example: chain A
     res_chain1 = get_all_res_list(curr_struct, eq_chain1)
     res_chain2 = get_all_res_list(struct2, eq_chain2)
@@ -202,15 +202,11 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
     # add to the fixed structure, the moved chain
     if moving_chain not in curr_struct[0]:
         curr_struct[0].add(struct2[0][moving_chain])
+        added=1
     else:
         print("problem: intentant afegir una cadena amb un id q ja hi es")
 
-    # exit(0)
-
-    return curr_struct
-
-
-
+    return curr_struct, added
 
 
 
@@ -237,7 +233,7 @@ def build_complex(current_str, mydir, PDB_dict):
                         rotating_chain= PDB_dict[filename2][0]
                         common_chain2=PDB_dict[filename2][1]
 
-                    current_str = func.superimpose_and_rotate(common_chain1, common_chain2, rotating_chain,
+                    current_str, sth_added = func.superimpose_and_rotate(common_chain1, common_chain2, rotating_chain, current_str, structure2, sth_added)
 
     if sth_added==1:
         build_complex(current_str,dir,PDB_dict)
