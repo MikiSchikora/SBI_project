@@ -43,9 +43,12 @@ p = pdb.PDBParser(PERMISSIVE=1)
 
 # parse file 1 and 2 and get a structure for each
 for filename1 in os.listdir(Templates_dir):
+
     # we start with the structure of the first pairwise interaction, this is now the current model
     current_structure = p.get_structure("pr1", Templates_dir + filename1)
     for chain in current_structure.get_chains():
         curr_id=chain.id
         chain.id=[x for x in PDB_info[filename1] if x[0]==curr_id][0]
+
+
     final_model=func.build_complex(current_structure, Templates_dir, PDB_info)

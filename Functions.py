@@ -177,7 +177,7 @@ def is_Steric_clash(structure, rotating_chain):
    Number_clashes = 0
 
    for at in rotating_chain.get_atoms():
-      neighbors = NS.search(at.get_coord(), 2.0)
+      neighbors = NS.search(at.get_coord(), 1.5)
 
 
 
@@ -191,13 +191,8 @@ def is_Steric_clash(structure, rotating_chain):
 
             if Distance < sum_VDW_radius:
                Number_clashes += 1
-               print(at,neigh)
-               print(sum_VDW_radius)
-               print(Distance)
-               print(Number_clashes)
 
-            if Number_clashes==100:
-               print(Number_clashes)
+            if Number_clashes==1:
                return True
 
    return False
@@ -205,7 +200,8 @@ def is_Steric_clash(structure, rotating_chain):
 
 def get_all_res_list(struct, chain):
     """Get a list with all residues of a particular chain"""
-    curr_chain = struct[0][chain]
+    print(struct, chain)
+    curr_chain = struct[0][chain.id]
     chain_res = [x for x in curr_chain.get_residues()]
     return chain_res
 
@@ -227,9 +223,16 @@ def get_atom_list_from_res_list(reslist):
 
 def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, struct2):
     # all residues from same chain (common chain) are retrieved from the 2 structures. Example: chain A
-    print(eq_chain1, eq_chain2, moving_chain, curr_struct, struct2)
-    res_chain1 = get_all_res_list(curr_struct, eq_chain1)
-    res_chain2 = get_all_res_list(struct2, eq_chain2)
+    # print(eq_chain1, eq_chain2, moving_chain, curr_struct, struct2)
+    #res_chain1 = get_all_res_list(curr_struct, eq_chain1)
+    #res_chain2 = get_all_res_list(struct2, eq_chain2)
+
+    #print(eq_chain1.id)
+
+    res_chain1 = list(curr_struct[0][eq_chain1.id].get_residues())
+    res_chain2 = list(struct2[0][eq_chain2.id].get_residues())
+    #print('residues 'res_chain1)
+    #print(res_chain2)
 
     # get the atoms of the previous list, ONLY belonging to common RESIDUES! to be then able to superimpose
     # so first we obtain a list of the common residues
@@ -249,21 +252,26 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
     # print(sup.rms)
 
     # rotate moving atoms
-    sup.apply(list(struct2[0][moving_chain].get_atoms()))
+    sup.apply(list(struct2[0][moving_chain.id].get_atoms()))
 
     # add to the fixed structure, the moved chain
     added=0
     if not is_Steric_clash(curr_struct,moving_chain):
+
         my_id=moving_chain.id
-        rand='|||'.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6)) #random ID
+        chain_names = [x.id for x in curr_struct[0].get_chains()]
+        print('chain_names',chain_names)
         while(added==0):
-            if my_id+rand not in curr_struct[0]:
+            rand = '|||'.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))  # random ID
+            if my_id+rand not in chain_names:
                 moving_chain.id=my_id+rand
-                curr_struct[0].add(struct2[0][moving_chain])
+
+                print('id if the moving chain',moving_chain.id)
+
+                curr_struct[0].add(struct2[0][moving_chain.id])
                 added=1
     else:
-        print("problem: intentant afegir una cadena amb un id q ja hi es")
-        added=0
+        print("problem:clash")
 
     return curr_struct, added
 
@@ -285,25 +293,38 @@ def build_complex(current_str, mydir, PDB_dict):
                     curr_id=chain.id
                     chain.id=[x for x in PDB_dict[filename2] if x[0]==curr_id][0]
 
+                #print(PDB_dict)
+
+                print('id of the first chain', PDB_dict[filename2][0].split('|||')[1])
+                print('id of the second chain ', PDB_dict[filename2][1].split('|||')[1])
+
                 for chain2 in structure2[0].get_chains():
                     id_chain2= chain2.id.split('|||')[1]
-
-                    if id_chain1 == id_chain2:
-                        common_chain2 = chain2
-                    else:
-                        rotating_chain = chain2
 
                     if PDB_dict[filename2][0].split('|||')[1]==PDB_dict[filename2][1].split('|||')[1]:
                         rotating_chain= structure2[0][PDB_dict[filename2][0]]
                         common_chain2= structure2[0][PDB_dict[filename2][1]]
 
-                    print(rotating_chain)
+                    elif id_chain1 == id_chain2:
+                        common_chain2 = chain2
+                    else:
+                        rotating_chain = chain2
 
-                    #current_str, sth_added = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2)
+                print('rotating_chain:',rotating_chain,'common_chain:',common_chain2)
+
+                current_str, sth_added = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2)
 
     if sth_added==1:
         build_complex(current_str,dir,PDB_dict)
     else:
+        print(list(current_str[0].get_chains()))
+        #return current_str
+
+        print
+
+
+        return
+
         io = pdb.PDBIO()
         io.set_structure(current_str)
         io.save('out1.pdb')
