@@ -5,12 +5,12 @@ import Bio.PDB as pdb
 from Bio.PDB import Structure as pdb_struct
 from Bio.PDB import Model as pdb_model
 import numpy as np
-import os
 import copy
 import Bio.SeqIO as Seq_IO
 from Bio import pairwise2
 import random
 import string
+import os
 
 
 def Generate_pairwise_subunits_from_pdb(pdb_file_path,Templates_dir):
@@ -20,6 +20,7 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path,Templates_dir):
    pdb_file_path is the path where the complex PDB is
 
    It does not consider nucleic acid sequences, as this is only for testing the program on different complexes"""
+
 
    TEMPLATES_path = Templates_dir
 
@@ -79,7 +80,8 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path,Templates_dir):
 
                # move the coordinates of the structure to simulate what would happen if they were coming from different files
 
-               rotation = np.array([[0.01,0.01,0.03],[0.01,0.03,0.02],[0.05,0.01,0.02]])
+               #rotation = np.array([[0.01,0.01,0.03],[0.01,0.03,0.02],[0.05,0.01,0.02]])
+               rotation = np.array([[1,0,0],[0,1,0],[0,0,1]])
                translation = np.array((0, 0, 1), 'f')
 
                for atom in new_structure.get_atoms():
@@ -91,7 +93,8 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path,Templates_dir):
                io.set_structure(new_structure)
                io.save(TEMPLATES_path+ID+'.pdb')
 
-def Generate_PDB_info(Templates_dir,subunits_seq_file, min_identity_between_chains = 30):
+
+def Generate_new_PDBs_and_info(Templates_dir,subunits_seq_file, min_identity_between_chains = 30):
 
    """This function takes the Templates_dir and creates a dictionary with information about each template
 
@@ -99,7 +102,9 @@ def Generate_PDB_info(Templates_dir,subunits_seq_file, min_identity_between_chai
 
    min_identity_between_chains refers to the minimum identity required between two molecules to state that they are the same
 
-   subunits_seq_file is a fasta file containing all the molecules that form the complex"""
+   subunits_seq_file is a fasta file containing all the molecules that form the complex
+
+   It also writes a new set of PDBs in ./NEW_TEMPLATES so that the chains are organized accordingly"""
 
    List_PDBs = os.listdir(Templates_dir)
 
@@ -117,8 +122,9 @@ def Generate_PDB_info(Templates_dir,subunits_seq_file, min_identity_between_chai
    for file in List_PDBs:
 
       path = Templates_dir+file
-      chains = list(parser.get_structure('structure', path).get_chains())
-      Chains_dict = {} # wll contain the unique ID for each chain
+      PDB_structure = parser.get_structure('structure', path)
+      chains = list(PDB_structure.get_chains())
+      Chain_IDs = [] # wll contain the unique ID for each chain
 
       for chain in chains:
          aaSeq = "".join([str(x.get_sequence()) for x in ppb.build_peptides(chain)])
@@ -148,64 +154,60 @@ def Generate_PDB_info(Templates_dir,subunits_seq_file, min_identity_between_chai
             break
 
          else:
-            Chains_dict[chain.id] = Seq_id
+            ID_new = str(chain.id+"|||"+Seq_id)
+            Chain_IDs.append(ID_new)
 
-      PDB_info[file] = Chains_dict
+      PDB_info[file] = Chain_IDs
+
 
    return PDB_info, set(Seqs.keys())
 
-def get_all_res_list(struct, chain):
-   """Get a list with all residues of a particular chain"""
-   curr_chain = struct[0][chain]
-   chain_res = [x for x in curr_chain.get_residues()]
-   return chain_res
 
-def get_list_of_common_res(reslist1, reslist2):
-   """Takes 2 lists of residues and returns a list of common residues (equal number)"""
-   common_res = [x for x in reslist1 if x.get_id()[1] in [y.get_id()[1] for y in reslist2]]
-   return common_res
+def is_Steric_clash(structure, rotating_chain):
 
-def get_atom_list_from_res_list(reslist):
-   """Get a list of atom objects from a list of residue objects"""
-   atomlist=[]
-   for res in reslist:
-      for atom in res.get_atoms():
-         atomlist.append(atom)
-   return atomlist
+   """This function returns a boolean that indicates if a rotating_chain clashes against
+    a structure.
 
-def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, struct2):
-   # all residues from same chain (common chain) are retrieved from the 2 structures. Example: chain A
-   res_chain1=get_all_res_list(curr_struct, eq_chain1)
-   res_chain2=get_all_res_list(struct2, eq_chain2)
+    The clash crteria is that at least one of the atoms are at a lower distance than
+    min_VDW_distance"""
 
-   # get the atoms of the previous list, ONLY belonging to common RESIDUES! to be then able to superimpose
-   # so first we obtain a list of the common residues
-   common_res_s1 = get_list_of_common_res(res_chain1, res_chain2)
-   common_res_s2 = get_list_of_common_res(res_chain2, res_chain1)
+   Van_der_Waals_radius = {'H':1.2,'C':1.7,'N':1.55,'O':1.52,'F':1.47,'P':1.8,'S':1.8}
 
-   # then we obtain a list of atom objects to use it later
-   common_atoms_s1=get_atom_list_from_res_list(common_res_s1)
-   common_atoms_s2=get_atom_list_from_res_list(common_res_s2)
+   NS = pdb.NeighborSearch(list(structure.get_atoms()))
+
+   Number_clashes = 0
+
+   for at in rotating_chain.get_atoms():
+      neighbors = NS.search(at.get_coord(), 2.0)
 
 
-   # use the Superimposer
-   sup = pdb.Superimposer()
 
-   # first argument is fixed, second is moving. both are lists of Atom objects
-   sup.set_atoms(common_atoms_s1, common_atoms_s2)
-   # print(sup.rotran)
-   # print(sup.rms)
+      # if you find a close atom, ask if it is a clash
+      if len(neighbors)>0:
 
-   # rotate moving atoms
-   sup.apply(list(struct2[0][moving_chain].get_atoms()))
+         for neigh in neighbors:
+
+            sum_VDW_radius = Van_der_Waals_radius[neigh.element] + Van_der_Waals_radius[at.element]
+            Distance = neigh - at
+
+            if Distance < sum_VDW_radius:
+               Number_clashes += 1
+               print(at,neigh)
+               print(sum_VDW_radius)
+               print(Distance)
+               print(Number_clashes)
+
+            if Number_clashes==100:
+               print(Number_clashes)
+               return True
+
+   return False
+
+if (__name__=="__main__"):
+
+   Templates_dir = './TEMPLATES/'
+   subunits_seq_file = './subunits_seq.fa'
+
+   PDB_info, Uniq_seqs = Generate_new_PDBs_and_info(Templates_dir, subunits_seq_file)
 
 
-   # add to the fixed structure, the moved chain
-   if moving_chain not in curr_struct[0]:
-      curr_struct[0].add(struct2[0][moving_chain])
-   else:
-      print("problem: intentant afegir una cadena amb un id q ja hi es")
-
-   #exit(0)
-
-   return curr_struct
