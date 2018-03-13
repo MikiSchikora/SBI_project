@@ -1,7 +1,6 @@
 
 # This is a python module that includes the functions and classes used in the main_pipeline.py
 
-
 import Bio.PDB as pdb
 from Bio.PDB import Structure as pdb_struct
 from Bio.PDB import Model as pdb_model
@@ -156,36 +155,41 @@ def Generate_PDB_info(Templates_dir,subunits_seq_file, min_identity_between_chai
    return PDB_info, set(Seqs.keys())
 
 
+def get_all_res_list(struct, chain):
+   """Get a list with all residues of a particular chain"""
+   curr_chain = struct[0][chain]
+   chain_res = [x.get_id()[1] for x in curr_chain.get_residues()]
+   return chain_res
+
+def get_list_of_common_res(reslist1, reslist2):
+   """Takes 2 lists of residues and returns a list of common residues (equal number)"""
+   common_res = [x for x in reslist1 if x in reslist2]
+   return common_res
+
+
+def get_atom_list_from_res_list(reslist):
+   """Get a list of atom objects from a list of residue objects"""
+   atomlist=[]
+   for res in reslist:
+      for atom in res.get_atoms():
+         atomlist.append(atom)
+   return atomlist
 
 
 def superimpose_and_rotate(common_chain1, common_chain2, rotating_chain, current_structure, structure2):
-   # same chain is retrieved from the 2 structures. Example: chain A
-   common_chain_s1 = current_structure[0][common_chain1]
-   common_chain_s2 = structure2[0][common_chain2]
+   # all residues from same chain (common chain) are retrieved from the 2 structures. Example: chain A
+   res_chain1=get_all_res_list(current_structure, common_chain1)
+   res_chain2=get_all_res_list(structure2, common_chain2)
 
+   # get the atoms of the previous list, ONLY belonging to common RESIDUES! to be then able to superimpose
+   # so first we obtain a list of the common residues
 
-   res_chain1 = [x.get_id()[1] for x in common_chain_s1.get_residues()]
-   res_chain2 = [x.get_id()[1] for x in common_chain_s2.get_residues()]
+   common_chain_res_s1 = get_list_of_common_res(res_chain1, res_chain2)
+   common_chain_res_s2 = get_list_of_common_res(res_chain2, res_chain1)
 
-   # get the atoms of the common chain in a list, where ONLY common RESIDUES are!
-   common_chain_res_s1 = [x for x in common_chain_s1.get_residues() if x.get_id()[1] in res_chain2]
-   common_chain_res_s2 = [x for x in common_chain_s2.get_residues() if x.get_id()[1] in res_chain1]
-
-   print(type(common_chain_res_s1))
-
-   print(len(common_chain_res_s1))
-   print(len(common_chain_res_s2))
-
-
-   common_chain_atoms_s1=[]
-   common_chain_atoms_s2=[]
-   for res in common_chain_res_s1:
-      for atom in res.get_atoms():
-         common_chain_atoms_s1.append(atom)
-   for res in common_chain_res_s2:
-      for atom in res.get_atoms():
-         common_chain_atoms_s2.append(atom)
-
+   # then we obtain a list of atom objects to use it later
+   common_chain_atoms_s1=get_atom_list_from_res_list(common_chain_res_s1)
+   common_chain_atoms_s2=get_atom_list_from_res_list(common_chain_res_s2)
 
 
    # use the Superimposer
@@ -193,8 +197,8 @@ def superimpose_and_rotate(common_chain1, common_chain2, rotating_chain, current
 
    # first argument is fixed, second is moving. both are lists of Atom objects
    sup.set_atoms(common_chain_atoms_s1, common_chain_atoms_s2)
-   print(sup.rotran)
-   print(sup.rms)
+   # print(sup.rotran)
+   # print(sup.rms)
 
    # rotate moving atoms
    sup.apply(list(structure2[0][rotating_chain].get_atoms()))
