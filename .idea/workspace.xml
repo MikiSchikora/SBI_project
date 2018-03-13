@@ -3,18 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="a1c11485-0eb0-4607-b4c6-6f4ac04babda" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change beforePath="$PROJECT_DIR$/Functions_miki.py" afterPath="$PROJECT_DIR$/Functions_miki.py" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/A_and_D.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/A_and_F.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/A_and_H.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/B_and_C.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/B_and_E.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/B_and_F.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/D_and_E.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/D_and_H.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/E_and_H.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/TEMPLATES/F_and_G.pdb" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/main_pipeline.py" afterPath="$PROJECT_DIR$/main_pipeline.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -28,37 +16,14 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="Functions_miki.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Functions_miki.py">
+      <file leaf-file-name="Steric_clash.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Steric_clash.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="352">
-              <caret line="107" column="0" lean-forward="true" selection-start-line="106" selection-start-column="17" selection-end-line="107" selection-end-column="0" />
+            <state relative-caret-position="-107">
+              <caret line="23" column="44" lean-forward="false" selection-start-line="23" selection-start-column="44" selection-end-line="23" selection-end-column="44" />
               <folding>
-                <element signature="e#98#119#0" expanded="true" />
-                <element signature="e#401#2906#0" expanded="false" />
+                <element signature="e#1#22#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="main_pipeline.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/main_pipeline.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="310">
-              <caret line="43" column="1" lean-forward="false" selection-start-line="43" selection-start-column="1" selection-end-line="43" selection-end-column="1" />
-              <folding>
-                <element signature="e#88#97#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="code.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/code.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="105">
-              <caret line="21" column="0" lean-forward="false" selection-start-line="21" selection-start-column="0" selection-end-line="60" selection-end-column="27" />
-              <folding />
             </state>
           </provider>
         </entry>
@@ -77,6 +42,7 @@
         <option value="$PROJECT_DIR$/Generate_pairwise_interactions.py" />
         <option value="$PROJECT_DIR$/Functions_miki.py" />
         <option value="$PROJECT_DIR$/main_pipeline.py" />
+        <option value="$PROJECT_DIR$/Steric_clash.py" />
       </list>
     </option>
   </component>
@@ -117,6 +83,11 @@
             <path>
               <item name="SBI_project" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+            </path>
+            <path>
+              <item name="SBI_project" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; Python 3.6 &gt;" type="70bed36:NamedLibraryElementNode" />
             </path>
           </expand>
           <select />
@@ -247,13 +218,13 @@
     <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32889965" sideWeight="0.49427754" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2394196" sideWeight="0.11516452" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Documentation" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3297568" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="0" y="0" width="310" height="600" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32889965" sideWeight="0.7846924" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32889965" sideWeight="0.8769671" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32889965" sideWeight="0.13304721" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Documentation" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.0" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="0" y="0" width="310" height="600" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32889965" sideWeight="0.77610874" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32889965" sideWeight="0.8719599" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32889965" sideWeight="0.86623746" order="2" side_tool="false" content_ui="combo" x="21" y="314" width="1398" height="272" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2394196" sideWeight="0.8848355" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.054363377" sideWeight="0.47247708" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2394196" sideWeight="0.87982833" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.13590844" sideWeight="0.47247708" order="0" side_tool="false" content_ui="combo" />
       <window_info id="R Packages" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Docker" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="R Graphics" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -319,7 +290,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#98#119#0" expanded="true" />
+            <element signature="e#98#119#0" expanded="false" />
             <element signature="e#401#2906#0" expanded="false" />
           </folding>
         </state>
@@ -330,7 +301,7 @@
         <state relative-caret-position="390">
           <caret line="27" column="0" lean-forward="true" selection-start-line="27" selection-start-column="0" selection-end-line="27" selection-end-column="0" />
           <folding>
-            <element signature="e#88#97#0" expanded="true" />
+            <element signature="e#88#97#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -431,23 +402,32 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Functions_miki.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="352">
-          <caret line="107" column="0" lean-forward="true" selection-start-line="106" selection-start-column="17" selection-end-line="107" selection-end-column="0" />
-          <folding>
-            <element signature="e#98#119#0" expanded="true" />
-            <element signature="e#401#2906#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/main_pipeline.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="310">
           <caret line="43" column="1" lean-forward="false" selection-start-line="43" selection-start-column="1" selection-end-line="43" selection-end-column="1" />
           <folding>
-            <element signature="e#88#97#0" expanded="true" />
+            <element signature="e#88#97#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Functions_miki.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="179">
+          <caret line="90" column="0" lean-forward="false" selection-start-line="90" selection-start-column="0" selection-end-line="92" selection-end-column="48" />
+          <folding>
+            <element signature="e#98#119#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Steric_clash.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-107">
+          <caret line="23" column="44" lean-forward="false" selection-start-line="23" selection-start-column="44" selection-end-line="23" selection-end-column="44" />
+          <folding>
+            <element signature="e#1#22#0" expanded="true" />
           </folding>
         </state>
       </provider>
