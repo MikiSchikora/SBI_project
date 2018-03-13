@@ -48,6 +48,4 @@ for filename1 in os.listdir(Templates_dir):
     for chain in current_structure.get_chains():
         curr_id=chain.id
         chain.id=[x for x in PDB_info[filename1] if x[0]==curr_id][0]
-        print(chain)
-    break
     final_model=func.build_complex(current_structure, Templates_dir, PDB_info)
