@@ -46,37 +46,38 @@ p = pdb.PDBParser(PERMISSIVE=1)
 
 # parse file 1 and 2 and get a structure for each
 for filename1 in os.listdir(Templates_dir):
-   # we start with the structure of the first pairwise interaction, this is now the current model
-   current_structure = p.get_structure("pr1", Templates_dir+filename1) 
-   current_chains=PDB_info[filename1]
+   if filename1.startswith("A"):
+      # we start with the structure of the first pairwise interaction, this is now the current model
+      current_structure = p.get_structure("pr1", Templates_dir+filename1)
+      current_chains=PDB_info[filename1]
 
-   # iterate through the chains of the current model
-   for common_chain1, common_id in current_chains.items():
+      # iterate through the chains of the current model
+      for common_chain1, common_id in current_chains.items():
 
-      # check if another file has this chain
-      for filename2 in os.listdir(Templates_dir):
-         # this file needs to be different from the first and also have a subunit in common with it
-         rotating_chain=None
-         common_chain2=None
-         structure2=None
-         if filename2 != filename1 and common_id in PDB_info[filename2].values():
+         # check if another file has this chain
+         for filename2 in os.listdir(Templates_dir):
+            # this file needs to be different from the first and also have a subunit in common with it
+            rotating_chain=None
+            common_chain2=None
+            structure2=None
+            if filename2 != filename1 and common_id in PDB_info[filename2].values():
 
-            structure2 = p.get_structure("pr2", Templates_dir+filename2)
+               structure2 = p.get_structure("pr2", Templates_dir+filename2)
 
-            # label the two chains as common (if equal id as previous chain) or rotating
-            for other_chain, other_id in PDB_info[filename2].items():
-               if other_id != common_id:
-                  rotating_chain = other_chain
-               else:
-                  common_chain2 = other_chain
+               # label the two chains as common (if equal id as previous chain) or rotating
+               for other_chain, other_id in PDB_info[filename2].items():
+                  if other_id != common_id:
+                     rotating_chain = other_chain
+                  else:
+                     common_chain2 = other_chain
 
-            # if this is an homodimer, the first chain is set to be the rotating
-            if list(PDB_info[filename2].values())[0] == list(PDB_info[filename2].values())[1]:
-               rotating_chain=list(PDB_info[filename2])[0]
+               # if this is an homodimer, the first chain is set to be the rotating
+               if list(PDB_info[filename2].values())[0] == list(PDB_info[filename2].values())[1]:
+                  rotating_chain=list(PDB_info[filename2])[0]
 
-            current_structure=func.superimpose_and_rotate(common_chain1, common_chain2, rotating_chain, current_structure, structure2)
+               current_structure=func.superimpose_and_rotate(common_chain1, common_chain2, rotating_chain, current_structure, structure2)
 
-            # save in a pdb file
-            io = pdb.PDBIO()
-            io.set_structure(current_structure)
-            io.save('out1.pdb')
+               # save in a pdb file
+               io = pdb.PDBIO()
+               io.set_structure(current_structure)
+               io.save('out1.pdb')
