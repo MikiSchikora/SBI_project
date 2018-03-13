@@ -57,6 +57,8 @@ for filename1 in os.listdir(Templates_dir):
       for filename2 in os.listdir(Templates_dir):
          # this file needs to be different from the first and also have a subunit in common with it
          rotating_chain=None
+         common_chain2=None
+         structure2=None
          if filename2 != filename1 and common_id in PDB_info[filename2].values():
 
             structure2 = p.get_structure("pr2", Templates_dir+filename2)
@@ -72,27 +74,7 @@ for filename1 in os.listdir(Templates_dir):
             if list(PDB_info[filename2].values())[0] == list(PDB_info[filename2].values())[1]:
                rotating_chain=list(PDB_info[filename2])[0]
 
-            # same chain is retrieved from the 2 structures. Example: chain A
-            common_chain_s1 = current_structure[0][common_chain1]
-            common_chain_s2 = structure2[0][common_chain2]
-
-            # get the atoms of the common chain in a list
-            common_chain_atoms_s1 = list(common_chain_s1.get_atoms())
-            common_chain_atoms_s2 = list(common_chain_s2.get_atoms())
-
-            # use the Superimposer
-            sup = pdb.Superimposer()
-
-            # first argument is fixed, second is moving. both are lists of Atom objects
-            sup.set_atoms(common_chain_atoms_s1, common_chain_atoms_s2)
-            print(sup.rotran)
-            print(sup.rms)
-
-            # rotate moving atoms
-            sup.apply(list(structure2[0][rotating_chain].get_atoms()))
-
-            # add to the fixed structure, the moved chain
-            current_structure[0].add(structure2[0][rotating_chain])
+            current_structure=func.superimpose_and_rotate(common_chain1, common_chain2, rotating_chain, current_structure, structure2)
 
             # save in a pdb file
             io = pdb.PDBIO()
