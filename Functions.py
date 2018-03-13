@@ -262,7 +262,7 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
         chain_names = [x.id for x in curr_struct[0].get_chains()]
         print('chain_names',chain_names)
         while(added==0):
-            rand = '|||'.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))  # random ID
+            rand = '|||'+''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))  # random ID
             if my_id+rand not in chain_names:
                 moving_chain.id=my_id+rand
 
@@ -317,10 +317,8 @@ def build_complex(current_str, mydir, PDB_dict):
     if sth_added==1:
         build_complex(current_str,dir,PDB_dict)
     else:
-        print(list(current_str[0].get_chains()))
+        print(list(current_str.get_chains()))
         #return current_str
-
-        print
 
 
         return
