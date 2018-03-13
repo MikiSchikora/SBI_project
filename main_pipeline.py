@@ -1,7 +1,7 @@
 # This is the main script for modelling a complex from a set of Pairwise interactions
 
 import os
-import Functions_miki as func
+import Functions as func
 import Bio.PDB as pdb
 
 # Parse the input arguments:
@@ -46,7 +46,8 @@ for filename1 in os.listdir(Templates_dir):
     if filename1.startswith("A"):
         # we start with the structure of the first pairwise interaction, this is now the current model
         current_structure = p.get_structure("pr1", Templates_dir + filename1)
-        current_chains = PDB_info[filename1]
+        final_model=func.build_complex(current_structure, Templates_dir, PDB_info)
+        ##current_chains = PDB_info[filename1]
 
         # iterate through the chains of the current model
         for common_chain1, common_id in current_chains.items():

@@ -208,3 +208,43 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
     # exit(0)
 
     return curr_struct
+
+
+
+
+
+
+def build_complex(current_str, mydir, PDB_dict):
+    """This function builds a complex from a set of templates"""
+    sth_added=0
+    for chain1 in current_str[0].get_chains():
+        id_chain1 = chain1.id.split('|||')[1]
+
+        for filename2 in os.listdir(mydir):
+            rotating_chain = None
+            common_chain2 = None
+            structure2 = None
+            if id_chain1 in [x.split('|||')[1] for x in PDB_dict[filename2]]:
+                structure2 = p.get_structure("pr2", Templates_dir + filename2)
+                for chain2 in structure2[0].get_chains():
+                    id_chain2= chain2.id.split('|||')[1]
+                    if id_chain1 == id_chain2:
+                        common_chain2= id_chain2
+                    else:
+                        rotating_chain= id_chain2
+
+                    if PDB_dict[filename2][0].split('|||')[1]==PDB_dict[filename2][1].split('|||')[1]:
+                        rotating_chain= PDB_dict[filename2][0]
+                        common_chain2=PDB_dict[filename2][1]
+
+                    current_str = func.superimpose_and_rotate(common_chain1, common_chain2, rotating_chain,
+
+    if sth_added==1:
+        build_complex(current_str,dir,PDB_dict)
+    else:
+        io = pdb.PDBIO()
+        io.set_structure(current_structure)
+        io.save('out1.pdb')
+
+
+
