@@ -321,12 +321,13 @@ def build_complex(current_str, mydir, PDB_dict):
         #return current_str
 
 
-        return
+
 
         io = pdb.PDBIO()
 
         hey=current_str[0].get_list()
         print(hey)
+        return
 
         io.set_structure(current_str)
         io.save('out1.pdb')
