@@ -40,8 +40,6 @@ def is_Steric_clash(structure, rotating_chain , distance_for_clash = 1.3):
                 n_clashes += 1
 
 
-    print(clashing_chains,n_clashes)
-
     if len(clashing_chains)>1:
 
         # a clash against different chains:
@@ -66,15 +64,20 @@ def is_Steric_clash(structure, rotating_chain , distance_for_clash = 1.3):
 
         RMSD = rmsd.kabsch_rmsd(common_atoms_s1, common_atoms_s2)
 
-        if RMSD <= 0.01:
+        if RMSD <= 0.1:
 
             # it is the same chain
             return 2
 
         else:
 
-            # it is anoother chain
+            # it is another chain
             return 1
+
+    elif n_clashes>0:
+
+        # it is another chain
+        return 1
 
     else:
 
