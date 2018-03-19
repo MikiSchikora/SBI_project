@@ -260,7 +260,7 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
 
         my_id=moving_chain.id
         chain_names = [x.id for x in curr_struct[0].get_chains()]
-        print('chain_names',chain_names)
+        #print('chain_names',chain_names)
         while(added==0):
             rand = '|||'+''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))  # random ID
             if my_id+rand not in chain_names:
@@ -295,8 +295,8 @@ def build_complex(current_str, mydir, PDB_dict):
 
                 #print(PDB_dict)
 
-                print('id of the first chain', PDB_dict[filename2][0].split('|||')[1])
-                print('id of the second chain ', PDB_dict[filename2][1].split('|||')[1])
+                #print('id of the first chain', PDB_dict[filename2][0].split('|||')[1])
+                #print('id of the second chain ', PDB_dict[filename2][1].split('|||')[1])
 
                 for chain2 in structure2[0].get_chains():
                     id_chain2= chain2.id.split('|||')[1]
@@ -310,7 +310,7 @@ def build_complex(current_str, mydir, PDB_dict):
                     else:
                         rotating_chain = chain2
 
-                print('rotating_chain:',rotating_chain,'common_chain:',common_chain2)
+                #print('rotating_chain:',rotating_chain,'common_chain:',common_chain2)
 
                 current_str, sth_added = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2)
 
@@ -324,6 +324,10 @@ def build_complex(current_str, mydir, PDB_dict):
         return
 
         io = pdb.PDBIO()
+
+        hey=current_str[0].get_list()
+        print(hey)
+
         io.set_structure(current_str)
         io.save('out1.pdb')
 
