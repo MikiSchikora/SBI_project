@@ -3,31 +3,88 @@
 import os
 import Functions as func
 import Bio.PDB as pdb
+import argparse
+
+
+parser = argparse.ArgumentParser(description="This program does BLA BLA BLA") #WRITE DESCRIPTION!!!!!
+
+parser.add_argument('-o', '--output-dir',
+   dest = "outputdir",
+   action = "store",
+   default = "./output_models",
+   help = "output directory")
+
+
+parser.add_argument('-i', '--input',
+   dest = "input",
+   action = "store",
+   default = None,
+   help = "Input a directory with several PDB files or a PDB complex to test the program")
+
+
+parser.add_argument('-v', '--verbose',
+   dest = "verbose",
+   action = "store_true",
+   default = False,
+   help = "Print log in stderr")
+
+
+parser.add_argument('-seq', '--sequences',
+   dest = "sequences",
+   action = "store",
+   default = None,
+   help = "Add a MULTIFASTA with the sequences of the different subunits of the complex to be modelled")
+
+
+parser.add_argument('-exh', '--exhaustive',
+   dest = "exhaustive",
+   action = "store_true",
+   default = False,
+   help = "Try all the possibilities. It may take a long time!")
+
+
+options = parser.parse_args()
 
 # Parse the input arguments:
-input_f = './TEMPLATES/'  # "./3kuy.pdb"
-output = './output.pdb'
+if options.input:
+    # process the input
+    if os.path.isfile(options.input):
+
+        # when the input is a file you have to generate all the interacting pairs, rotated and translated
+        if options.input.split('.')[-1] != 'pdb': #OTHER EXTENSIONS??????????
+            raise EnvironmentError('The provided complex has to be a PDB file')
+
+        Templates_dir = './TEMPLATES/'
+        func.Generate_pairwise_subunits_from_pdb(options.input, Templates_dir)
+
+    elif os.path.isdir(options.input):
+        Templates_dir = options.input
+
+    else:
+        raise EnvironmentError('You have to provide a valid input path')
+else:
+    raise IOError("No input provided")
+
+
+# define the output, if it is not specified, then it is the default
+output=options.outputdir
+
+# handle multifasta file input
+# a file containing the sequences of the subunits to include. This is mandatory for any chain that is not a random DNA seuqnce.
+if options.sequences:
+    # if a multifasta is provided
+    subunits_seq_file=options.sequences
+else:
+    # if a multifasta is not provided
+    subunits_seq_file=None
+    print("NO SUBUNITS SEQ FILE")
+
+
 
 stoichiometry_file = './stoch.tbl'  # a file containing information about the stoichiometry. This is mandatory
 number_subunits_file = './subunits_num.tbl'  # a file containing the number of subunits, if known
-subunits_seq_file = './subunits_seq.fa'  # a file containing the sequences of the subunits to include. This is mandatory for any chain that is not a random DNA seuqnce.
 
-# process the input
-if os.path.isfile(input_f):
 
-    # when the input is a file you have to generate all the interacting pairs, rotated and translated
-    if input_f.split('.')[-1] != 'pdb':
-        raise EnvironmentError('The provided complex has to be a PDB file')
-
-    Templates_dir = './TEMPLATES/'
-    func.Generate_pairwise_subunits_from_pdb(input_f, Templates_dir)
-
-elif os.path.isdir(input_f):
-
-    Templates_dir = input_f
-
-else:
-    raise EnvironmentError('You have to provide a valid input path')
 
 # generate info about the Templates
 # PDB_info information about the unique chains: Keys: filename, Values: {Chain: unique ID}

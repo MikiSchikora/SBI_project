@@ -91,75 +91,94 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path, Templates_dir):
                     io.set_structure(new_structure)
                     io.save(TEMPLATES_path + ID + '.pdb')
 
+def create_random_chars_id(n):
+    """Creates an identifier with n random characters."""
+    rand_id= ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(n))
+    return rand_id
 
-def Generate_PDB_info(Templates_dir, subunits_seq_file, min_identity_between_chains=30):
+def add_new_seqid_to_dicts(seq, dict1, dict2, n):
+    """Adds a random identifier of n characters to 2 dictionaries, the first having a sequence, the other initialising and empty set"""
+    seq_id = create_random_chars_id(n) # create random ID
+    while seq_id in dict1:
+        seq_id = create_random_chars_id(n) # random ID is already in Seqs dict
+    dict1[seq_id]=seq
+    dict2[seq_id] = set()
+
+    return seq_id, dict1[seq_id], dict2[seq_id]
+
+
+def Generate_PDB_info(Templates_dir, subunits_seq_file, min_identity_between_chains=95):
     """This function takes the Templates_dir and creates a dictionary with information about each template
-
-    Each template get's incorporated into a dictionary with a unique identifiers for it's chains, in a way that you save all files that are useful
-
+    Each template gets incorporated into a dictionary with a unique identifiers for it's chains, in a way that you save all files that are useful
     min_identity_between_chains refers to the minimum identity required between two molecules to state that they are the same
-
     subunits_seq_file is a fasta file containing all the molecules that form the complex
-
     it also returns a dictionary with keys: chain ids, values: array of filenames that contain that key"""
 
     List_PDBs = os.listdir(Templates_dir)
-
     PDB_info = {}  # This will contain information about the unique chains: Keys: filename, Values: {Chain: unique ID}
-
     Seq_to_filenames = {}  # dictionary that contains the filenames that contain each seq ID
-
-    # create a dictionary that has the known sequences
-    Seqs = {}
-    for record in Seq_IO.parse(subunits_seq_file, "fasta"):
-        Seqs[record.id] = record.seq._data
-        Seq_to_filenames[record.id] = set()
 
     ppb = pdb.Polypeptide.PPBuilder()  # polypeptide parser
     parser = pdb.PDBParser(PERMISSIVE=1)  # pdb parser
 
-    for file in List_PDBs:
+    # create a dictionary that has the known sequences if a multifasta is given
+    Seqs = {}
+    if subunits_seq_file:
+        for record in Seq_IO.parse(subunits_seq_file, "fasta"):
+            Seqs[record.id] = record.seq._data
+            Seq_to_filenames[record.id] = set()
 
+    for file in List_PDBs:
         path = Templates_dir + file
         PDB_structure = parser.get_structure('structure', path)
         chains = list(PDB_structure.get_chains())
         Chain_IDs = []  # wll contain the unique ID for each chain
 
         for chain in chains:
+            # obtain the sequence of the chain
             aaSeq = "".join([str(x.get_sequence()) for x in ppb.build_peptides(chain)])
 
-            # Assign an ID (id of the fasta or a new for the molecule) to the sequence:
-
+            # assign an ID (id of the fasta or a new for the molecule) to the sequence:
             Seq_id = None
             Best_identity = min_identity_between_chains
 
-            for my_id in Seqs.keys():
+            # compare the current chain sequence with the ones present in Seqs
+            if Seqs:
+                for my_id in Seqs:
+                    # align my current sequence with the sequences stored in Seqs dictionary
+                    alignment = pairwise2.align.globalxx(aaSeq, Seqs[my_id])
+                    # compute percentage identity
+                    percent_match = (alignment[0][2] / min(len(aaSeq), len(Seqs[my_id]))) * 100
 
-                alignment = pairwise2.align.globalxx(aaSeq, Seqs[my_id])
-                percent_match = (alignment[0][2] / len(min(aaSeq, Seqs[my_id]))) * 100
+                    # if percentage identity is lar
+                    if percent_match > Best_identity:
+                        Seq_id = my_id
+                        Best_identity = percent_match
 
-                if percent_match > Best_identity:
-                    Seq_id = my_id
-                    Best_identity = percent_match
+                # my current sequence didnt match anything in Seqs, so it is added to the dictionary
+                if Seq_id is None and subunits_seq_file is None:
+                    Seq_id, Seqs[Seq_id], Seq_to_filenames[Seq_id] = add_new_seqid_to_dicts(aaSeq, Seqs, Seq_to_filenames, 6)
 
-            # if it doesn't fit anything, it may be DNA or RNA, noty included in the provided fasta file
+            # add the current chain sequence to Seqs if it is empty
+            else:
+                Seq_id, Seqs[Seq_id], Seq_to_filenames[Seq_id] = add_new_seqid_to_dicts(aaSeq, Seqs, Seq_to_filenames, 6)
 
-            if Seq_id is None and all(i in 'ACUTG' for i in aaSeq):
-                Seq_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))  # random ID
-                Seqs[Seq_id] = aaSeq
 
-            if Seq_id is None:
+            # if my current seq doesn't fit anything, it may be DNA or RNA, not included in the provided fasta file
+            if Seq_id is None and all(i in 'ACUTG' for i in aaSeq): # only if a multifasta file is provided
+                Seq_id, Seqs[Seq_id], Seq_to_filenames[Seq_id] = add_new_seqid_to_dicts(aaSeq, Seqs, Seq_to_filenames, 6)
+
+
+            if Seq_id is None: # only if a multifasta file is provided
                 print(file + " contains non provided and non acid nucleic sequences!!")
                 break
-
+            # save info info dictionary Seq_to_filenames {Seq_id:filename}
             else:
                 ID_new = str(chain.id + "|||" + Seq_id)
                 Chain_IDs.append(ID_new)
-
                 Seq_to_filenames[Seq_id].add(file)
 
-
-
+        # save info into dictionary PDB_info {filename:chain_ids_list}
         PDB_info[file] = Chain_IDs
 
     return PDB_info, Seq_to_filenames
@@ -244,14 +263,10 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
 
         my_id = moving_chain.id
         chain_names = [x.id for x in curr_struct[0].get_chains()]
-        # print('chain_names',chain_names)
         while (added == 0):
             rand = '|||' + ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))  # random ID
             if my_id + rand not in chain_names:
                 moving_chain.id = my_id + rand
-
-                print('id if the moving chain', moving_chain.id)
-
                 curr_struct[0].add(struct2[0][moving_chain.id])
                 added = 1
     else:
@@ -272,7 +287,7 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames):
 
     #rec_level += 1
 
-    print(Seq_to_filenames)
+    #print(Seq_to_filenames)
 
     sth_added = 0
     p = pdb.PDBParser(PERMISSIVE=1)
@@ -286,19 +301,19 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames):
 
     filenames_all = list(set(filenames_all)) # unique
 
-    print(filenames_all)
+    #print(filenames_all)
     n_perm = 0
     permutations = []
     for permutation in  iter.permutations(filenames_all):
         permutations.append(permutation)
         n_perm+=1
-        print(permutation)
+        #print(permutation)
         if n_perm==100:
             break
 
 
 
-    print(permutations)
+    #print(permutations)
 
 
     # iterate through the chains of the current structure
