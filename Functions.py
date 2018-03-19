@@ -11,13 +11,12 @@ from Bio import pairwise2
 import random
 import string
 import itertools as iter
+import rmsd
 
 
 def Generate_pairwise_subunits_from_pdb(pdb_file_path, Templates_dir):
     """This function takes an existing complex and fragments it into each of the pairwise interactions between subunits.
-
     pdb_file_path is the path where the complex PDB is
-
     It does not consider nucleic acid sequences, as this is only for testing the program on different complexes"""
 
     TEMPLATES_path = Templates_dir
@@ -60,7 +59,7 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path, Templates_dir):
                             try:
                                 distance = residue1['CA'] - residue2['CA']
                             except KeyError:
-                                ## no CA atom, e.g. for H_NAG
+                                # no CA atom, e.g. for H_NAG
                                 continue
                             if distance < 10:
                                 chains_interacting = 1
@@ -91,17 +90,19 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path, Templates_dir):
                     io.set_structure(new_structure)
                     io.save(TEMPLATES_path + ID + '.pdb')
 
+
 def create_random_chars_id(n):
     """Creates an identifier with n random characters."""
-    rand_id= ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(n))
+    rand_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(n))
     return rand_id
+
 
 def add_new_seqid_to_dicts(seq, dict1, dict2, n):
     """Adds a random identifier of n characters to 2 dictionaries, the first having a sequence, the other initialising and empty set"""
-    seq_id = create_random_chars_id(n) # create random ID
+    seq_id = create_random_chars_id(n)  # create random ID
     while seq_id in dict1:
-        seq_id = create_random_chars_id(n) # random ID is already in Seqs dict
-    dict1[seq_id]=seq
+        seq_id = create_random_chars_id(n)  # random ID is already in Seqs dict
+    dict1[seq_id] = seq
     dict2[seq_id] = set()
 
     return seq_id, dict1[seq_id], dict2[seq_id]
@@ -155,7 +156,7 @@ def Generate_PDB_info(Templates_dir, subunits_seq_file, min_identity_between_cha
                         Seq_id = my_id
                         Best_identity = percent_match
 
-                # my current sequence didnt match anything in Seqs, so it is added to the dictionary
+                # my current sequence didn't match anything in Seqs, so it is added to the dictionary
                 if Seq_id is None and subunits_seq_file is None:
                     Seq_id, Seqs[Seq_id], Seq_to_filenames[Seq_id] = add_new_seqid_to_dicts(aaSeq, Seqs, Seq_to_filenames, 6)
 
@@ -163,13 +164,11 @@ def Generate_PDB_info(Templates_dir, subunits_seq_file, min_identity_between_cha
             else:
                 Seq_id, Seqs[Seq_id], Seq_to_filenames[Seq_id] = add_new_seqid_to_dicts(aaSeq, Seqs, Seq_to_filenames, 6)
 
-
             # if my current seq doesn't fit anything, it may be DNA or RNA, not included in the provided fasta file
             if Seq_id is None and all(i in 'ACUTG' for i in aaSeq): # only if a multifasta file is provided
                 Seq_id, Seqs[Seq_id], Seq_to_filenames[Seq_id] = add_new_seqid_to_dicts(aaSeq, Seqs, Seq_to_filenames, 6)
 
-
-            if Seq_id is None: # only if a multifasta file is provided
+            if Seq_id is None:  # only if a multifasta file is provided
                 print(file + " contains non provided and non acid nucleic sequences!!")
                 break
             # save info info dictionary Seq_to_filenames {Seq_id:filename}
@@ -184,36 +183,64 @@ def Generate_PDB_info(Templates_dir, subunits_seq_file, min_identity_between_cha
     return PDB_info, Seq_to_filenames
 
 
-def is_Steric_clash(structure, rotating_chain):
-    """This function returns a boolean that indicates if a rotating_chain clashes against
-     a structure.
+def is_Steric_clash(structure, rotating_chain, distance_for_clash=1):
 
-     The clash crteria is that at least one of the atoms are at a lower distance than 1.2 A"""
+    """This function returns False if there's no clash between a rotating chain and the current structure.
+    If there's a clash it can return 1 (clash between two different chains) or 2 (you are trying to superimpose something in the place it was already)
 
-    Van_der_Waals_radius = {'H': 1.2, 'C': 1.7, 'N': 1.55, 'O': 1.52, 'F': 1.47, 'P': 1.8, 'S': 1.8}
+    The clash criteria is that at least one of the atoms are at a lower distance than distance_for_clash A"""
 
     NS = pdb.NeighborSearch(list(structure.get_atoms()))
 
-    Number_clashes = 0
+    clashing_chains = set()
+    n_clashes = 0
 
     for at in rotating_chain.get_atoms():
-        neighbors = NS.search(at.get_coord(), 1.5)
+        neighbors = NS.search(at.get_coord(), distance_for_clash)
 
-        # if you find a close atom, ask if it is a clash
         if len(neighbors) > 0:
-
             for neigh in neighbors:
+                clashing_chains.add(neigh.get_parent().get_parent().id)
+                n_clashes += 1
 
-                sum_VDW_radius = Van_der_Waals_radius[neigh.element] + Van_der_Waals_radius[at.element]
-                Distance = neigh - at
 
-                if Distance < sum_VDW_radius:
-                    Number_clashes += 1
+    if len(clashing_chains) > 1:
+        # a clash against different chains:
+        return 1
 
-                if Number_clashes == 1:
-                    return True
+    elif len(clashing_chains) == 1 and n_clashes > 100 and rotating_chain.id.split('|||')[1] == list(clashing_chains)[0].split('|||')[1]:
 
-    return False
+        # a clash MAYBE because you are trying to superimpose something in the place it was already
+        # define the clashing chain:
+        clash_chain = structure[0][list(clashing_chains)[0]]
+        res_chain1 = list(clash_chain.get_residues())
+        res_chain2 = list(rotating_chain.get_residues())
+
+        # so first we obtain a list of the common residues
+        common_res_s1 = get_list_of_common_res(res_chain1, res_chain2)
+        common_res_s2 = get_list_of_common_res(res_chain2, res_chain1)
+
+        # then we obtain a list of atom objects to use it later
+        common_atoms_s1 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_s1) if x.id=='CA'])
+        common_atoms_s2 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_s2) if x.id=='CA'])
+
+        RMSD = rmsd.kabsch_rmsd(common_atoms_s1, common_atoms_s2)
+
+        if RMSD <= 1:
+            # it is the same chain
+            return 2
+
+        else:
+            # it is another chain or the same with different structure
+            return 1
+
+    elif n_clashes > 0:
+        # it is another chain
+        return 1
+
+    else:
+        # no clash
+        return False
 
 
 def get_list_of_common_res(reslist1, reslist2):
@@ -259,19 +286,19 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
 
     # add to the fixed structure, the moved chain
     added = 0
-    if not is_Steric_clash(curr_struct, moving_chain):
+    clash = is_Steric_clash(curr_struct, moving_chain)
 
+    if not clash:
         my_id = moving_chain.id
         chain_names = [x.id for x in curr_struct[0].get_chains()]
-        while (added == 0):
-            rand = '|||' + ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))  # random ID
+        while added == 0:
+            rand = '|||' + create_random_chars_id(6)  # random ID
             if my_id + rand not in chain_names:
                 moving_chain.id = my_id + rand
                 curr_struct[0].add(struct2[0][moving_chain.id])
                 added = 1
-    else:
+    elif clash == 1:
         pass
-        #print("problem:clash")
 
     return curr_struct, added
 
@@ -283,11 +310,11 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames):
     # call the global variables:
 
     # global tried_operations
-    #global rec_level
+    # global rec_level
 
-    #rec_level += 1
+    # rec_level += 1
 
-    #print(Seq_to_filenames)
+    # print(Seq_to_filenames)
 
     sth_added = 0
     p = pdb.PDBParser(PERMISSIVE=1)
@@ -299,22 +326,19 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames):
         id_chain1 = chain1.id.split('|||')[1]
         filenames_all += list(Seq_to_filenames[id_chain1])
 
-    filenames_all = list(set(filenames_all)) # unique
+    filenames_all = list(set(filenames_all))  # unique
 
-    #print(filenames_all)
+    # print(filenames_all)
     n_perm = 0
     permutations = []
-    for permutation in  iter.permutations(filenames_all):
+    for permutation in iter.permutations(filenames_all):
         permutations.append(permutation)
-        n_perm+=1
-        #print(permutation)
-        if n_perm==100:
+        n_perm += 1
+        # print(permutation)
+        if n_perm == 100:
             break
 
-
-
-    #print(permutations)
-
+    # print(permutations)
 
     # iterate through the chains of the current structure
     for chain1 in current_str[0].get_chains():
@@ -366,8 +390,8 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames):
         for final_chain in final_chains:
             final_chain.id = chain_alphabet[alphabet_pos]
             alphabet_pos += 1
-            #print("final chain id")
-            #print(final_chain.id)
+            # print("final chain id")
+            # print(final_chain.id)
 
         # then we can finally save the obtained structure object into a pdb file
         io = pdb.PDBIO()
