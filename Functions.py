@@ -61,7 +61,7 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path, Templates_dir):
                             except KeyError:
                                 # no CA atom, e.g. for H_NAG
                                 continue
-                            if distance < 10:
+                            if distance < 5:
                                 chains_interacting = 1
 
                 if chains_interacting == 1:
@@ -203,7 +203,6 @@ def is_Steric_clash(structure, rotating_chain, distance_for_clash=1):
                 clashing_chains.add(neigh.get_parent().get_parent().id)
                 n_clashes += 1
 
-
     if len(clashing_chains) > 1:
         # a clash against different chains:
         return 1
@@ -225,6 +224,7 @@ def is_Steric_clash(structure, rotating_chain, distance_for_clash=1):
         common_atoms_s2 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_s2) if x.id=='CA'])
 
         RMSD = rmsd.kabsch_rmsd(common_atoms_s1, common_atoms_s2)
+        print("clash chain: ", clash_chain, " rotating chain: ", rotating_chain, RMSD)
 
         if RMSD <= 1:
             # it is the same chain
@@ -299,6 +299,7 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
                 added = 1
     elif clash == 1:
         pass
+        print("clash=1")
 
     return curr_struct, added
 

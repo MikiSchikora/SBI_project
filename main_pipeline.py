@@ -6,41 +6,41 @@ import Bio.PDB as pdb
 import argparse
 
 
-parser = argparse.ArgumentParser(description="This program does BLA BLA BLA") #WRITE DESCRIPTION!!!!!
+parser = argparse.ArgumentParser(description="This program does BLA BLA BLA")  # WRITE DESCRIPTION!!!!!
 
 parser.add_argument('-o', '--output-dir',
-   dest = "outputdir",
-   action = "store",
-   default = "./output_models",
-   help = "output directory")
+   dest="outputdir",
+   action="store",
+   default="./output_models",
+   help="output directory")
 
 
 parser.add_argument('-i', '--input',
-   dest = "input",
-   action = "store",
-   default = None,
-   help = "Input a directory with several PDB files or a PDB complex to test the program")
+   dest="input",
+   action="store",
+   default=None,
+   help="Input a directory with several PDB files or a PDB complex to test the program")
 
 
 parser.add_argument('-v', '--verbose',
-   dest = "verbose",
-   action = "store_true",
-   default = False,
-   help = "Print log in stderr")
+   dest="verbose",
+   action="store_true",
+   default=False,
+   help="Print log in stderr")
 
 
 parser.add_argument('-seq', '--sequences',
-   dest = "sequences",
-   action = "store",
-   default = None,
-   help = "Add a MULTIFASTA with the sequences of the different subunits of the complex to be modelled")
+   dest="sequences",
+   action="store",
+   default=None,
+   help="Add a MULTIFASTA with the sequences of the different subunits of the complex to be modelled")
 
 
 parser.add_argument('-exh', '--exhaustive',
-   dest = "exhaustive",
-   action = "store_true",
-   default = False,
-   help = "Try all the possibilities. It may take a long time!")
+   dest="exhaustive",
+   action="store_true",
+   default=False,
+   help="Try all the possibilities. It may take a long time!")
 
 
 options = parser.parse_args()
@@ -51,7 +51,7 @@ if options.input:
     if os.path.isfile(options.input):
 
         # when the input is a file you have to generate all the interacting pairs, rotated and translated
-        if options.input.split('.')[-1] != 'pdb': #OTHER EXTENSIONS??????????
+        if options.input.split('.')[-1] != 'pdb':  # OTHER EXTENSIONS??????????
             raise EnvironmentError('The provided complex has to be a PDB file')
 
         Templates_dir = './TEMPLATES/'
@@ -73,17 +73,15 @@ output=options.outputdir
 # a file containing the sequences of the subunits to include. This is mandatory for any chain that is not a random DNA seuqnce.
 if options.sequences:
     # if a multifasta is provided
-    subunits_seq_file=options.sequences
+    subunits_seq_file = options.sequences
 else:
     # if a multifasta is not provided
-    subunits_seq_file=None
+    subunits_seq_file = None
     print("NO SUBUNITS SEQ FILE")
-
 
 
 stoichiometry_file = './stoch.tbl'  # a file containing information about the stoichiometry. This is mandatory
 number_subunits_file = './subunits_num.tbl'  # a file containing the number of subunits, if known
-
 
 
 # generate info about the Templates
@@ -110,9 +108,9 @@ for filename1 in os.listdir(Templates_dir):
 
     # initialize some global vars
 
-    #tried_operations = set() # a set containing the tried operations (chain1_full_id, filename2, rotating_chain_accession)
-    rec_level  = 0 # the recursivity level
+    # tried_operations = set() # a set containing the tried operations (chain1_full_id, filename2, rotating_chain_accession)
+    rec_level = 0  # the recursivity level
 
     # then we call the function 'build_complex'
-    final_model=func.build_complex(current_structure, Templates_dir, PDB_info, Seq_to_filenames)
+    final_model = func.build_complex(current_structure, Templates_dir, PDB_info, Seq_to_filenames)
     break
