@@ -103,7 +103,7 @@ for filename1 in os.listdir(Templates_dir):
         curr_id=chain.id
         chain.id=[x for x in PDB_info[filename1] if x[0]==curr_id][0]
 
-    # all the chains, but the initial 2, in the current_structure will have this naming for a proper working of the code:
+    # NOTE: all the chains, but the initial 2, in the current_structure will have this naming for a proper working of the code:
         # (A|||H2A3_B|||AGS6G), that corresponds to (chain_accession|||chain_id|||random_id)
 
     # initialize some global vars

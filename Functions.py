@@ -224,7 +224,7 @@ def is_Steric_clash(structure, rotating_chain, distance_for_clash=1):
         common_atoms_s2 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_s2) if x.id=='CA'])
 
         RMSD = rmsd.kabsch_rmsd(common_atoms_s1, common_atoms_s2)
-        print("clash chain: ", clash_chain, " rotating chain: ", rotating_chain, RMSD)
+        #print("clash chain: ", clash_chain, " rotating chain: ", rotating_chain, RMSD)
 
         if RMSD <= 1:
             # it is the same chain
@@ -299,9 +299,25 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
                 added = 1
     elif clash == 1:
         pass
-        print("clash=1")
+        #print("clash=1")
 
-    return curr_struct, added
+    return curr_struct, added, clash
+
+def generate_new_permutations(all_files,filename):
+
+    """ This function inputs a list of files (all_files) and a filename of interest
+    outputs a list of tuples, in which each of them has filename in a different position """
+
+    new_permutations = []
+
+    for idx in range(0,len(all_files)):
+
+        all_files.remove(filename)
+        all_files.insert(idx,filename)
+
+        new_permutations.append(tuple(all_files))
+
+    return(new_permutations)
 
 
 def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames):
@@ -321,84 +337,109 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames):
     p = pdb.PDBParser(PERMISSIVE=1)
 
     # define a list of the files containing the chains in current_str
-    filenames_all = []
-    for chain1 in current_str[0].get_chains():
+    # filenames_all = []
+    # for chain1 in current_str[0].get_chains():
+    #
+    #     id_chain1 = chain1.id.split('|||')[1]
+    #     filenames_all += list(Seq_to_filenames[id_chain1])
+    #
+    # filenames_all = list(set(filenames_all))  # unique
+    #
+    # # print(filenames_all)
+    # n_perm = 0
+    # permutations = []
+    # for permutation in iter.permutations(filenames_all):
+    #     permutations.append(permutation)
+    #     n_perm += 1
+    #     # print(permutation)
+    #     if n_perm == 100:
+    #         break
 
-        id_chain1 = chain1.id.split('|||')[1]
-        filenames_all += list(Seq_to_filenames[id_chain1])
+    id_per = 0 # the id of the permutation we are using
+    all_files = os.listdir(mydir)
+    permutations = [tuple(all_files)] # these are all the necessary paths at this level
 
-    filenames_all = list(set(filenames_all))  # unique
+    # try all the permutations
+    while(id_per < len(permutations)):
 
-    # print(filenames_all)
-    n_perm = 0
-    permutations = []
-    for permutation in iter.permutations(filenames_all):
-        permutations.append(permutation)
-        n_perm += 1
-        # print(permutation)
-        if n_perm == 100:
-            break
+        permutation = permutations[id_per]
+        id_per += 1
 
-    # print(permutations)
+        # iterate through the chains of the current structure
+        for chain1 in current_str[0].get_chains():
 
-    # iterate through the chains of the current structure
-    for chain1 in current_str[0].get_chains():
+            id_chain1 = chain1.id.split('|||')[1]
 
-        id_chain1 = chain1.id.split('|||')[1]
+            # iterate through the PDB files of the directory to compare them to the current struct
+            for filename2 in permutation:
+                rotating_chain = None
+                common_chain2 = None
+                add_permutations = 0 # indicates if there has to be new permutations arround this filename2
 
-        # iterate through the PDB files of the directory to compare them to the current struct
-        for filename2 in os.listdir(mydir):
-            rotating_chain = None
-            common_chain2 = None
+                # if the chain id of the current structure is found in the second PDB file:
+                if id_chain1 in [x.split('|||')[1] for x in PDB_dict[filename2]]:
+                    # get the structure
+                    structure2 = p.get_structure("pr2", mydir + filename2)
 
-            # if the chain id of the current structure is found in the second PDB file:
-            if id_chain1 in [x.split('|||')[1] for x in PDB_dict[filename2]]:
-                # get the structure
-                structure2 = p.get_structure("pr2", mydir + filename2)
+                    # change the chain id names
+                    for chain in structure2.get_chains():
+                        curr_id = chain.id
+                        chain.id = [x for x in PDB_dict[filename2] if x[0] == curr_id][0]
 
-                # change the chain id names
-                for chain in structure2.get_chains():
-                    curr_id = chain.id
-                    chain.id = [x for x in PDB_dict[filename2] if x[0] == curr_id][0]
+                    for chain2 in structure2.get_chains():
+                        id_chain2 = chain2.id.split('|||')[1]
 
-                for chain2 in structure2.get_chains():
-                    id_chain2 = chain2.id.split('|||')[1]
+                        if PDB_dict[filename2][0].split('|||')[1] == PDB_dict[filename2][1].split('|||')[1]:
+                            rotating_chain = structure2[0][PDB_dict[filename2][0]]
+                            common_chain2 = structure2[0][PDB_dict[filename2][1]]
 
-                    if PDB_dict[filename2][0].split('|||')[1] == PDB_dict[filename2][1].split('|||')[1]:
-                        rotating_chain = structure2[0][PDB_dict[filename2][0]]
-                        common_chain2 = structure2[0][PDB_dict[filename2][1]]
+                        elif id_chain1 == id_chain2:
+                            common_chain2 = chain2
+                        else:
+                            rotating_chain = chain2
 
-                    elif id_chain1 == id_chain2:
-                        common_chain2 = chain2
-                    else:
-                        rotating_chain = chain2
+                    # check if this operation has already been tried before, and skip if so
+                    # operation = (chain1.id, filename2, rotating_chain.id[0])
 
-                # check if this operation has already been tried before, and skip if so
+                    current_str, sth_added, clash  = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2)
 
-                # operation = (chain1.id, filename2, rotating_chain.id[0])
+                    if clash==1: # the rotating_chain is clashing against the current_str, but this is not because it is a chain that is already there
+                        add_permutations=1
 
-                current_str, sth_added = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2)
+                # generate permutations in which only filename2 is changing
+                if add_permutations==1:
 
-    if sth_added == 1:
-        build_complex(current_str, mydir, PDB_dict, Seq_to_filenames)
+                    new_permutations = generate_new_permutations(all_files,filename2)
 
-    else:
-        # we go through all the chains of the structure and rename them alphabetically
-        final_chains = list(current_str.get_chains())  # list of chain objects
-        chain_alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
-                          "T", "U", "V", "W", "X", "Y", "Z"]
-        alphabet_pos = 0
-        for final_chain in final_chains:
-            final_chain.id = chain_alphabet[alphabet_pos]
-            alphabet_pos += 1
-            # print("final chain id")
-            # print(final_chain.id)
+                    # add the permutations that are not already in permutations:
 
-        # then we can finally save the obtained structure object into a pdb file
-        io = pdb.PDBIO()
-        io.set_structure(current_str)
-        io.save('out1.pdb')
+                    for new_perm in new_permutations:
+                        if new_perm not in permutations:
+                            permutations.append(new_perm)
 
-        return
+
+        if sth_added == 1:
+            build_complex(current_str, mydir, PDB_dict, Seq_to_filenames)
+
+        else:
+            # we go through all the chains of the structure and rename them alphabetically
+            final_chains = list(current_str.get_chains())  # list of chain objects
+            chain_alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
+                              "T", "U", "V", "W", "X", "Y", "Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o",
+                              "p","q","r","s","t","u","v","w","x","y","z","1","2","3","4","5","6","7","8","9","0"]
+            alphabet_pos = 0
+            for final_chain in final_chains:
+                final_chain.id = chain_alphabet[alphabet_pos]
+                alphabet_pos += 1
+                # print("final chain id")
+                # print(final_chain.id)
+
+            # then we can finally save the obtained structure object into a pdb file
+            p
+            io = pdb.PDBIO()
+            io.set_structure(current_str)
+            io.save('out1.pdb')
+
+    print(permutations)
 
     return
