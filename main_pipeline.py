@@ -5,7 +5,6 @@ import Functions as func
 import Bio.PDB as pdb
 
 # Parse the input arguments:
-
 input_f = './TEMPLATES/'  # "./3kuy.pdb"
 output = './output.pdb'
 
@@ -14,16 +13,13 @@ number_subunits_file = './subunits_num.tbl'  # a file containing the number of s
 subunits_seq_file = './subunits_seq.fa'  # a file containing the sequences of the subunits to include. This is mandatory for any chain that is not a random DNA seuqnce.
 
 # process the input
-
 if os.path.isfile(input_f):
 
     # when the input is a file you have to generate all the interacting pairs, rotated and translated
-
     if input_f.split('.')[-1] != 'pdb':
         raise EnvironmentError('The provided complex has to be a PDB file')
 
     Templates_dir = './TEMPLATES/'
-
     func.Generate_pairwise_subunits_from_pdb(input_f, Templates_dir)
 
 elif os.path.isdir(input_f):
@@ -50,5 +46,6 @@ for filename1 in os.listdir(Templates_dir):
         curr_id=chain.id
         chain.id=[x for x in PDB_info[filename1] if x[0]==curr_id][0]
 
-
+    # then we call the function 'build_complex'
     final_model=func.build_complex(current_structure, Templates_dir, PDB_info)
+    break

@@ -281,24 +281,30 @@ def build_complex(current_str, mydir, PDB_dict):
     """This function builds a complex from a set of templates"""
     sth_added=0
     p = pdb.PDBParser(PERMISSIVE=1)
+
+    # iterate through the chains of the current structure
     for chain1 in current_str[0].get_chains():
         id_chain1 = chain1.id.split('|||')[1]
 
+        # iterate through the PDB files of the directory to compare them to the current struct
         for filename2 in os.listdir(mydir):
             rotating_chain = None
             common_chain2 = None
+
+            # if the chain id of the current structure is found in the second PDB file:
             if id_chain1 in [x.split('|||')[1] for x in PDB_dict[filename2]]:
+                # get the structure
                 structure2 = p.get_structure("pr2", mydir + filename2)
+                #
                 for chain in structure2.get_chains():
                     curr_id=chain.id
                     chain.id=[x for x in PDB_dict[filename2] if x[0]==curr_id][0]
 
                 #print(PDB_dict)
-
                 #print('id of the first chain', PDB_dict[filename2][0].split('|||')[1])
                 #print('id of the second chain ', PDB_dict[filename2][1].split('|||')[1])
 
-                for chain2 in structure2[0].get_chains():
+                for chain2 in structure2.get_chains():
                     id_chain2= chain2.id.split('|||')[1]
 
                     if PDB_dict[filename2][0].split('|||')[1]==PDB_dict[filename2][1].split('|||')[1]:
@@ -311,26 +317,27 @@ def build_complex(current_str, mydir, PDB_dict):
                         rotating_chain = chain2
 
                 #print('rotating_chain:',rotating_chain,'common_chain:',common_chain2)
-
                 current_str, sth_added = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2)
 
     if sth_added==1:
         build_complex(current_str,dir,PDB_dict)
     else:
-        print(list(current_str.get_chains()))
-        #return current_str
+        # we go through all the chains of the structure and rename them alphabetically
+        final_chains=list(current_str.get_chains()) # list of chain objects
+        chain_alphabet=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
+        alphabet_pos=0
+        for final_chain in final_chains:
+            final_chain.id=chain_alphabet[alphabet_pos]
+            alphabet_pos=alphabet_pos+1
+            print("final chain id")
+            print(final_chain.id)
 
-
-
-
+        # then we can finally save the obtained structure object into a pdb file
         io = pdb.PDBIO()
-
-        hey=current_str[0].get_list()
-        print(hey)
-        return
-
         io.set_structure(current_str)
         io.save('out1.pdb')
+
+        return
 
 
 
