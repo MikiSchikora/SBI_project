@@ -12,6 +12,7 @@ import random
 import string
 import itertools as iter
 import rmsd
+import copy as cp
 
 
 def Generate_pairwise_subunits_from_pdb(pdb_file_path, Templates_dir):
@@ -138,6 +139,8 @@ def Generate_PDB_info(Templates_dir, subunits_seq_file, min_identity_between_cha
         for chain in chains:
             # obtain the sequence of the chain
             aaSeq = "".join([str(x.get_sequence()) for x in ppb.build_peptides(chain)])
+            if aaSeq == '':
+                aaSeq = create_random_chars_id(len(chain))
 
             # assign an ID (id of the fasta or a new for the molecule) to the sequence:
             Seq_id = None
@@ -178,7 +181,8 @@ def Generate_PDB_info(Templates_dir, subunits_seq_file, min_identity_between_cha
                 Seq_to_filenames[Seq_id].add(file)
 
         # save info into dictionary PDB_info {filename:chain_ids_list}
-        PDB_info[file] = Chain_IDs
+        if len(Chain_IDs) == 2:
+            PDB_info[file] = Chain_IDs
 
     return PDB_info, Seq_to_filenames
 
@@ -187,6 +191,8 @@ def is_Steric_clash(structure, rotating_chain, distance_for_clash=1):
 
     """This function returns False if there's no clash between a rotating chain and the current structure.
     If there's a clash it can return 1 (clash between two different chains) or 2 (you are trying to superimpose something in the place it was already)
+
+    it also returns the ids of the chains in structure that are clashing
 
     The clash criteria is that at least one of the atoms are at a lower distance than distance_for_clash A"""
 
@@ -205,7 +211,7 @@ def is_Steric_clash(structure, rotating_chain, distance_for_clash=1):
 
     if len(clashing_chains) > 1:
         # a clash against different chains:
-        return 1
+        val_to_return = 1
 
     elif len(clashing_chains) == 1 and n_clashes > 100 and rotating_chain.id.split('|||')[1] == list(clashing_chains)[0].split('|||')[1]:
 
@@ -226,21 +232,28 @@ def is_Steric_clash(structure, rotating_chain, distance_for_clash=1):
         RMSD = rmsd.kabsch_rmsd(common_atoms_s1, common_atoms_s2)
         #print("clash chain: ", clash_chain, " rotating chain: ", rotating_chain, RMSD)
 
-        if RMSD <= 1:
+        if RMSD <= 2:
             # it is the same chain
-            return 2
+            val_to_return =  2
 
         else:
             # it is another chain or the same with different structure
-            return 1
+            val_to_return =  1
 
     elif n_clashes > 0:
         # it is another chain
-        return 1
+        val_to_return =  1
 
     else:
         # no clash
-        return False
+        val_to_return = False
+
+    if val_to_return:
+        return val_to_return, clashing_chains
+    else:
+        return val_to_return, None
+
+
 
 
 def get_list_of_common_res(reslist1, reslist2):
@@ -254,7 +267,8 @@ def get_atom_list_from_res_list(reslist):
     atomlist = []
     for res in reslist:
         for atom in res.get_atoms():
-            atomlist.append(atom)
+            if atom.id == 'CA':
+                atomlist.append(atom)
     return atomlist
 
 
@@ -286,7 +300,7 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
 
     # add to the fixed structure, the moved chain
     added = 0
-    clash = is_Steric_clash(curr_struct, moving_chain)
+    clash, clashing_chains = is_Steric_clash(curr_struct, moving_chain)
 
     if not clash:
         my_id = moving_chain.id
@@ -297,11 +311,9 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
                 moving_chain.id = my_id + rand
                 curr_struct[0].add(struct2[0][moving_chain.id])
                 added = 1
-    elif clash == 1:
-        pass
-        #print("clash=1")
 
-    return curr_struct, added, clash
+    return curr_struct, added, clash, clashing_chains, moving_chain
+
 
 def generate_new_permutations(all_files,filename):
 
@@ -320,126 +332,142 @@ def generate_new_permutations(all_files,filename):
     return(new_permutations)
 
 
-def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames):
+def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames,rec_level, this_is_a_branch=False, non_brancheable_clashes=None, this_is_a_complex_recursion=False, tried_operations=set()):
 
     """This function builds a complex from a set of templates"""
 
-    # call the global variables:
+    # update the rec_level:
+    rec_level += 1
+    print('RECURSION LEVEL:',rec_level)
 
-    # global tried_operations
-    # global rec_level
-
-    # rec_level += 1
-
-    # print(Seq_to_filenames)
-
-    sth_added = 0
+    # a parser that is going to be used many times:
     p = pdb.PDBParser(PERMISSIVE=1)
 
-    # define a list of the files containing the chains in current_str
-    # filenames_all = []
-    # for chain1 in current_str[0].get_chains():
-    #
-    #     id_chain1 = chain1.id.split('|||')[1]
-    #     filenames_all += list(Seq_to_filenames[id_chain1])
-    #
-    # filenames_all = list(set(filenames_all))  # unique
-    #
-    # # print(filenames_all)
-    # n_perm = 0
-    # permutations = []
-    # for permutation in iter.permutations(filenames_all):
-    #     permutations.append(permutation)
-    #     n_perm += 1
-    #     # print(permutation)
-    #     if n_perm == 100:
-    #         break
+    # files that have to be used
+    all_files = list(PDB_dict.keys())
 
-    id_per = 0 # the id of the permutation we are using
-    all_files = os.listdir(mydir)
-    permutations = [tuple(all_files)] # these are all the necessary paths at this level
+    # a boolean that indicates if there's something added at this level
+    something_added = False
 
-    # try all the permutations
-    while(id_per < len(permutations)):
+    if not this_is_a_branch:
 
-        permutation = permutations[id_per]
-        id_per += 1
+        # initialize a set of tuples that contain which are the clashes that do not define a clash
+        non_brancheable_clashes = set()
 
-        # iterate through the chains of the current structure
-        for chain1 in current_str[0].get_chains():
+    if not this_is_a_complex_recursion:
+        tried_operations = set()
 
-            id_chain1 = chain1.id.split('|||')[1]
 
-            # iterate through the PDB files of the directory to compare them to the current struct
-            for filename2 in permutation:
-                rotating_chain = None
-                common_chain2 = None
-                add_permutations = 0 # indicates if there has to be new permutations arround this filename2
+    # iterate through the chains of the current structure
+    for chain1 in current_str[0].get_chains():
 
-                # if the chain id of the current structure is found in the second PDB file:
-                if id_chain1 in [x.split('|||')[1] for x in PDB_dict[filename2]]:
-                    # get the structure
-                    structure2 = p.get_structure("pr2", mydir + filename2)
+        id_chain1 = chain1.id.split('|||')[1]
 
-                    # change the chain id names
-                    for chain in structure2.get_chains():
-                        curr_id = chain.id
-                        chain.id = [x for x in PDB_dict[filename2] if x[0] == curr_id][0]
+        # iterate through the PDB files of the directory to compare them to the current struct
+        for filename2 in all_files:
+            rotating_chain = None
+            common_chain2 = None
 
-                    for chain2 in structure2.get_chains():
-                        id_chain2 = chain2.id.split('|||')[1]
+            # if the chain id of the current structure is found in the second PDB file:
+            if id_chain1 in [x.split('|||')[1] for x in PDB_dict[filename2]]:
+                # get the structure
+                structure2 = p.get_structure("pr2", mydir + filename2)
 
-                        if PDB_dict[filename2][0].split('|||')[1] == PDB_dict[filename2][1].split('|||')[1]:
-                            rotating_chain = structure2[0][PDB_dict[filename2][0]]
-                            common_chain2 = structure2[0][PDB_dict[filename2][1]]
+                # change the chain id names
+                for chain in structure2.get_chains():
+                    curr_id = chain.id
+                    chain.id = [x for x in PDB_dict[filename2] if x[0] == curr_id][0]
 
-                        elif id_chain1 == id_chain2:
-                            common_chain2 = chain2
+                for chain2 in structure2.get_chains():
+                    id_chain2 = chain2.id.split('|||')[1]
+
+                    if PDB_dict[filename2][0].split('|||')[1] == PDB_dict[filename2][1].split('|||')[1]:
+                        rotating_chain = structure2[0][PDB_dict[filename2][0]]
+                        common_chain2 = structure2[0][PDB_dict[filename2][1]]
+
+                    elif id_chain1 == id_chain2:
+                        common_chain2 = chain2
+                    else:
+                        rotating_chain = chain2
+
+                # check if this operation has already been tried before, and skip if so
+                operation = (chain1.id, filename2, rotating_chain.id[0])
+
+                if operation not in tried_operations:
+
+                    tried_operations.add(operation)
+                    current_str, sth_added, clash , clashing_chains, added_chain  = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2)
+
+                    # when something is added
+                    if sth_added == 1:
+
+                        # record if there has been any chain added:
+                        something_added = True
+
+
+                    # when there's a aberrant clash
+                    if clash==1:
+
+                        # a branch complex will be created if the rotating chain is not one of the previously branch-opening clashing chains
+                        # or if the clashes happen against the chain that opened this branch
+
+                        open_branch = False
+
+                        if this_is_a_branch:
+
+                            clash_ids = set([(x,added_chain.id.split('|||')[1]) for x in clashing_chains])
+
+                            if len(non_brancheable_clashes.intersection(clash_ids))==0:
+                                open_branch = True
+
                         else:
-                            rotating_chain = chain2
+                            open_branch = True
 
-                    # check if this operation has already been tried before, and skip if so
-                    # operation = (chain1.id, filename2, rotating_chain.id[0])
+                        if open_branch:
 
-                    current_str, sth_added, clash  = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2)
+                            print("opening new branch")
 
-                    if clash==1: # the rotating_chain is clashing against the current_str, but this is not because it is a chain that is already there
-                        add_permutations=1
+                            # set the id of the chain you were trying to add:
+                            added_chain = cp.deepcopy(added_chain)
+                            added_chain.id = added_chain.id + '|||' + create_random_chars_id(6)
 
-                # generate permutations in which only filename2 is changing
-                if add_permutations==1:
+                            # make a new branch:
+                            branch_new_str = cp.deepcopy(current_str)
 
-                    new_permutations = generate_new_permutations(all_files,filename2)
+                            # remove the chains that chains that are clashing:
+                            for clashing_chain in clashing_chains:
+                                branch_new_str[0].detach_child(clashing_chain)
 
-                    # add the permutations that are not already in permutations:
+                            # create a set of tuples (added_chain, clashing_chains_ids) of branch opening exceptions
+                            for x in clashing_chains:
+                                non_brancheable_clashes.add((added_chain.id, x.split('|||')[1]))
 
-                    for new_perm in new_permutations:
-                        if new_perm not in permutations:
-                            permutations.append(new_perm)
+                            # add the chaing that was clashing:
+                            branch_new_str[0].add(added_chain)
 
+                            # create a new structure based on this branch:
+                            build_complex(branch_new_str, mydir, PDB_dict, Seq_to_filenames, rec_level, this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes)
 
-        if sth_added == 1:
-            build_complex(current_str, mydir, PDB_dict, Seq_to_filenames)
+    if something_added:
+        build_complex(current_str, mydir, PDB_dict, Seq_to_filenames,rec_level, this_is_a_complex_recursion=True, tried_operations=tried_operations)
 
-        else:
-            # we go through all the chains of the structure and rename them alphabetically
-            final_chains = list(current_str.get_chains())  # list of chain objects
-            chain_alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
-                              "T", "U", "V", "W", "X", "Y", "Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o",
-                              "p","q","r","s","t","u","v","w","x","y","z","1","2","3","4","5","6","7","8","9","0"]
-            alphabet_pos = 0
-            for final_chain in final_chains:
-                final_chain.id = chain_alphabet[alphabet_pos]
-                alphabet_pos += 1
-                # print("final chain id")
-                # print(final_chain.id)
+    else:
+        # we go through all the chains of the structure and rename them alphabetically
+        final_chains = list(current_str.get_chains())  # list of chain objects
+        chain_alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
+                          "T", "U", "V", "W", "X", "Y", "Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o",
+                          "p","q","r","s","t","u","v","w","x","y","z","1","2","3","4","5","6","7","8","9","0"]
+        alphabet_pos = 0
+        for final_chain in final_chains:
+            final_chain.id = chain_alphabet[alphabet_pos]
+            alphabet_pos += 1
 
-            # then we can finally save the obtained structure object into a pdb file
-            p
-            io = pdb.PDBIO()
-            io.set_structure(current_str)
-            io.save('out1.pdb')
-
-    print(permutations)
+        # then we can finally save the obtained structure object into a pdb file
+        print('printing')
+        io = pdb.PDBIO()
+        io.set_structure(current_str)
+        io.save('./Output_models/'+create_random_chars_id(10)+'.pdb')
 
     return
+
+
