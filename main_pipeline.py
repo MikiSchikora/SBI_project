@@ -1,7 +1,7 @@
 # This is the main script for modelling a complex from a set of Pairwise interactions
 
 import os
-import Functions as func
+import prova as func
 import Bio.PDB as pdb
 import argparse
 
@@ -45,17 +45,23 @@ parser.add_argument('-exh', '--exhaustive',
 
 options = parser.parse_args()
 
+filetype = 'PDB'
+
 # Parse the input arguments:
 if options.input:
     # process the input
     if os.path.isfile(options.input):
 
         # when the input is a file you have to generate all the interacting pairs, rotated and translated
-        if options.input.split('.')[-1] != 'pdb':  # OTHER EXTENSIONS??????????
-            raise EnvironmentError('The provided complex has to be a PDB file')
+        if options.input.split('.')[-1] == 'pdb':  # OTHER EXTENSIONS?????????? # !!!
+            filetype = 'PDB'  # !!!
+        elif options.input.split('.')[-1] == 'cif':  # !!!
+            filetype = 'CIF'  # !!!
+        else:  # !!!
+            raise EnvironmentError('The provided complex has to be a PDB or mmCIF file')
 
         Templates_dir = './TEMPLATES/'
-        func.Generate_pairwise_subunits_from_pdb(options.input, Templates_dir)
+        func.Generate_pairwise_subunits_from_pdb(options.input, Templates_dir, filetype)
 
     elif os.path.isdir(options.input):
         Templates_dir = options.input
@@ -67,7 +73,7 @@ else:
 
 
 # define the output, if it is not specified, then it is the default
-output=options.outputdir
+output = options.outputdir
 
 # handle multifasta file input
 # a file containing the sequences of the subunits to include. This is mandatory for any chain that is not a random DNA seuqnce.
@@ -90,10 +96,13 @@ number_subunits_file = './subunits_num.tbl'  # a file containing the number of s
 PDB_info, Seq_to_filenames = func.Generate_PDB_info(Templates_dir, subunits_seq_file)
 
 # initialise PDB files parser
-p = pdb.PDBParser(PERMISSIVE=1)
+#if filetype == 'PDB':  # !!!
+p = pdb.PDBParser(PERMISSIVE=1)  # !!!
+#else:  # !!!
+    #p = pdb.MMCIFParser()  # !!!
 
 # parse file 1 and 2 and get a structure for each
-for filename1 in os.listdir(Templates_dir):
+for filename1 in PDB_info:
 
     # we start with the structure of the first pairwise interaction, this is now the current model
     current_structure = p.get_structure("pr1", Templates_dir + filename1)
@@ -112,5 +121,5 @@ for filename1 in os.listdir(Templates_dir):
     rec_level = 0  # the recursivity level
 
     # then we call the function 'build_complex'
-    final_model = func.build_complex(current_structure, Templates_dir, PDB_info, Seq_to_filenames)
+    func.build_complex(current_structure, Templates_dir, PDB_info, Seq_to_filenames, filetype)  # !!!
     break
