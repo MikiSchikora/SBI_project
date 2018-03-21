@@ -240,23 +240,23 @@ def is_Steric_clash(structure, rotating_chain, distance_for_clash=1):
         common_res_s2 = get_list_of_common_res(res_chain2, res_chain1)
 
         # then we obtain a list of atom objects to use it later
-        common_atoms_s1 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_s1) if x.id=='CA'])
-        common_atoms_s2 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_s2) if x.id=='CA'])
+        common_atoms_s1 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_s1) if x.id == 'CA'])
+        common_atoms_s2 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_s2) if x.id == 'CA'])
 
         RMSD = rmsd.kabsch_rmsd(common_atoms_s1, common_atoms_s2)
-        #print("clash chain: ", clash_chain, " rotating chain: ", rotating_chain, RMSD)
+        # print("clash chain: ", clash_chain, " rotating chain: ", rotating_chain, RMSD)
 
         if RMSD <= 2.0:
             # it is the same chain
-            val_to_return =  2
+            val_to_return = 2
 
         else:
             # it is another chain or the same with different structure
-            val_to_return =  1
+            val_to_return = 1
 
     elif n_clashes > 0:
         # it is another chain
-        val_to_return =  1
+        val_to_return = 1
 
     else:
         # no clash
@@ -266,8 +266,6 @@ def is_Steric_clash(structure, rotating_chain, distance_for_clash=1):
         return val_to_return, clashing_chains
     else:
         return val_to_return, None
-
-
 
 
 def get_list_of_common_res(reslist1, reslist2):
@@ -317,7 +315,7 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
     added = 0
     clash, clashing_chains = is_Steric_clash(curr_struct, moving_chain)
 
-    if not clash and rms<=3.0:
+    if not clash and rms <= 3.0:
         my_id = moving_chain.id
         chain_names = [x.id for x in curr_struct[0].get_chains()]
         while added == 0:
@@ -330,21 +328,22 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
     return curr_struct, added, clash, clashing_chains, moving_chain
 
 
-def generate_new_permutations(all_files,filename):
+def generate_new_permutations(all_files, filename):
 
     """ This function inputs a list of files (all_files) and a filename of interest
     outputs a list of tuples, in which each of them has filename in a different position """
 
     new_permutations = []
 
-    for idx in range(0,len(all_files)):
+    for idx in range(0, len(all_files)):
 
         all_files.remove(filename)
-        all_files.insert(idx,filename)
+        all_files.insert(idx, filename)
 
         new_permutations.append(tuple(all_files))
 
-    return(new_permutations)
+    return new_permutations
+
 
 def structure_in_created_structures(structure, created_structures):
 
@@ -353,16 +352,16 @@ def structure_in_created_structures(structure, created_structures):
     # Get the ids of the chains in structure
 
     chain_ids_structure = tuple(sorted([x.id.split('|||')[1] for x in structure.get_chains()]))
-    #chain_ids_structure = tuple(sorted([x.id for x in structure.get_chains()]))
+    # chain_ids_structure = tuple(sorted([x.id for x in structure.get_chains()]))
 
     # loop through each of the contents of created_structures:
     for created_structure in created_structures:
 
         # get the chains of created_structure
         chain_ids_created_structure = tuple(sorted([x.id.split('|||')[1] for x in created_structure.get_chains()]))
-        #chain_ids_created_structure = tuple(sorted([x.id for x in created_structure.get_chains()]))
+        # chain_ids_created_structure = tuple(sorted([x.id for x in created_structure.get_chains()]))
 
-        #print(chain_ids_structure, chain_ids_created_structure)
+        # print(chain_ids_structure, chain_ids_created_structure)
 
         # ask if the number of each and ids of the chains are the same:
         if chain_ids_structure == chain_ids_created_structure:
@@ -446,8 +445,8 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
 
                 if operation not in tried_operations:
 
-                    #tried_operations.add(operation)
-                    current_str, sth_added, clash , clashing_chains, added_chain  = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2)
+                    # tried_operations.add(operation)
+                    current_str, sth_added, clash, clashing_chains, added_chain = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2)
 
                     # when something is added
                     if sth_added == 1:
@@ -455,9 +454,8 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
                         # record if there has been any chain added:
                         something_added = True
 
-
                     # when there's a aberrant clash
-                    if clash==1:
+                    if clash == 1:
 
                         # a branch complex will be created if the rotating chain is not one of the previously branch-opening clashing chains
                         # or if the clashes happen against the chain that opened this branch
@@ -466,10 +464,10 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
 
                         if this_is_a_branch:
 
-                            clash_ids = set([(x,added_chain.id.split('|||')[1]) for x in clashing_chains])
+                            clash_ids = set([(x, added_chain.id.split('|||')[1]) for x in clashing_chains])
 
                             # check if the clashes are not an exception
-                            if len(non_brancheable_clashes.intersection(clash_ids))==0:
+                            if len(non_brancheable_clashes.intersection(clash_ids)) == 0:
                                 open_branch = True
 
                         else:
@@ -508,9 +506,9 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
     if something_added:
 
         if this_is_a_branch:
-            set_this_is_a_branch=True
+            set_this_is_a_branch = True
         else:
-            set_this_is_a_branch=False
+            set_this_is_a_branch = False
 
         build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_complex_recursion=True, this_is_a_branch=set_this_is_a_branch, non_brancheable_clashes=non_brancheable_clashes,
                       rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures)
@@ -546,12 +544,11 @@ if __name__ == "__main__":
 
     # this code is executed when this is called as a script
 
-    #parser = pdb.PDBParser(PERMISSIVE=1)
-    #structure1 = parser.get_structure('pdb_name', './3kuy.pdb')
-    #structure2 = parser.get_structure('pdb_name', './3kuy.pdb')
+    # parser = pdb.PDBParser(PERMISSIVE=1)
+    # structure1 = parser.get_structure('pdb_name', './3kuy.pdb')
+    # structure2 = parser.get_structure('pdb_name', './3kuy.pdb')
 
-    #created_structures = [structure1,structure1]
+    # created_structures = [structure1,structure1]
 
-    #print(structure_in_created_structures(structure1, created_structures))
-     pass
-
+    # print(structure_in_created_structures(structure1, created_structures))
+    pass
