@@ -332,13 +332,19 @@ def generate_new_permutations(all_files,filename):
     return(new_permutations)
 
 
-def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames,rec_level, this_is_a_branch=False, non_brancheable_clashes=None, this_is_a_complex_recursion=False, tried_operations=set()):
+def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), tried_operations=set(), rec_level_branch=0, rec_level_complex=0):
 
     """This function builds a complex from a set of templates"""
 
     # update the rec_level:
-    rec_level += 1
-    print('RECURSION LEVEL:',rec_level)
+
+    if this_is_a_branch:
+        rec_level_branch += 1
+        print('BRANCH LEVEL: ',rec_level_branch)
+
+    if this_is_a_complex_recursion:
+        rec_level_complex += 1
+        print('COMPLEX LEVEL: ', rec_level_complex)
 
     # a parser that is going to be used many times:
     p = pdb.PDBParser(PERMISSIVE=1)
@@ -348,15 +354,6 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames,rec_level, this
 
     # a boolean that indicates if there's something added at this level
     something_added = False
-
-    if not this_is_a_branch:
-
-        # initialize a set of tuples that contain which are the clashes that do not define a clash
-        non_brancheable_clashes = set()
-
-    if not this_is_a_complex_recursion:
-        tried_operations = set()
-
 
     # iterate through the chains of the current structure
     for chain1 in current_str[0].get_chains():
@@ -395,7 +392,7 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames,rec_level, this
 
                 if operation not in tried_operations:
 
-                    tried_operations.add(operation)
+                    #tried_operations.add(operation)
                     current_str, sth_added, clash , clashing_chains, added_chain  = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2)
 
                     # when something is added
@@ -446,10 +443,10 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames,rec_level, this
                             branch_new_str[0].add(added_chain)
 
                             # create a new structure based on this branch:
-                            build_complex(branch_new_str, mydir, PDB_dict, Seq_to_filenames, rec_level, this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes)
+                            build_complex(branch_new_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes)
 
     if something_added:
-        build_complex(current_str, mydir, PDB_dict, Seq_to_filenames,rec_level, this_is_a_complex_recursion=True, tried_operations=tried_operations)
+        build_complex(current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_complex_recursion=True, non_brancheable_clashes=non_brancheable_clashes)
 
     else:
         # we go through all the chains of the structure and rename them alphabetically
@@ -463,10 +460,16 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames,rec_level, this
             alphabet_pos += 1
 
         # then we can finally save the obtained structure object into a pdb file
-        print('printing')
+        written_id = 0
+        PDB_name = 'model_' + str(written_id) + '.pdb'
+        while PDB_name in os.listdir('./Output_models/'):
+            written_id += 1
+            PDB_name = 'model_'+str(written_id)+'.pdb'
+
+        print('printing '+PDB_name)
         io = pdb.PDBIO()
         io.set_structure(current_str)
-        io.save('./Output_models/'+create_random_chars_id(10)+'.pdb')
+        io.save('./Output_models/'+PDB_name)
 
     return
 
