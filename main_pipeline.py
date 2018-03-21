@@ -1,7 +1,7 @@
 # This is the main script for modelling a complex from a set of Pairwise interactions
 
 import os
-import Functions as func
+import Functions_marina as func
 import Bio.PDB as pdb
 import argparse
 
@@ -96,6 +96,8 @@ PDB_info, Seq_to_filenames = func.Generate_PDB_info(Templates_dir, subunits_seq_
 # initialise PDB files parser
 p = pdb.PDBParser(PERMISSIVE=1)
 
+final_models = []
+
 # parse file 1 and 2 and get a structure for each
 for filename1 in os.listdir(Templates_dir):
 
@@ -116,5 +118,28 @@ for filename1 in os.listdir(Templates_dir):
     rec_level = 0  # the recursivity level
 
     # then we call the function 'build_complex'
-    func.build_complex(current_structure, Templates_dir, PDB_info, Seq_to_filenames)
+    final_models = func.build_complex(final_models, current_structure, Templates_dir, PDB_info, Seq_to_filenames)
     break
+
+
+for final_model in final_models:
+    # we go through all the chains of the structure and rename them alphabetically
+    final_chains = list(final_model.get_chains())  # list of chain objects
+    chain_alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
+                      "T", "U", "V", "W", "X", "Y", "Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o",
+                      "p","q","r","s","t","u","v","w","x","y","z","1","2","3","4","5","6","7","8","9","0"]
+    alphabet_pos = 0
+    for final_chain in final_chains:
+        final_chain.id = chain_alphabet[alphabet_pos]
+        alphabet_pos += 1
+
+    # then we can finally save the obtained structure object into a pdb file
+    written_id = 0
+    PDB_name = 'model_' + str(written_id) + '.pdb'
+    while PDB_name in os.listdir('./Output_models/'):
+        written_id += 1
+        PDB_name = 'model_'+str(written_id)+'.pdb'
+
+    io = pdb.PDBIO()
+    io.set_structure(final_model)
+    io.save('./Output_models/'+PDB_name)

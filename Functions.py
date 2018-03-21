@@ -362,19 +362,19 @@ def structure_in_created_structures(structure, created_structures):
         chain_ids_created_structure = tuple(sorted([x.id.split('|||')[1] for x in created_structure.get_chains()]))
         #chain_ids_created_structure = tuple(sorted([x.id for x in created_structure.get_chains()]))
 
-        print(chain_ids_structure, chain_ids_created_structure)
+        #print(chain_ids_structure, chain_ids_created_structure)
 
         # ask if the number of each and ids of the chains are the same:
-        if chain_ids_structure==chain_ids_created_structure:
+        if chain_ids_structure == chain_ids_created_structure:
 
             # try to make the superimposition of the two structures:
 
             # define each of the atoms:
-            atoms_structure = [x for x in structure.get_atoms() if x.id=='CA']
+            atoms_structure = [x for x in structure.get_atoms() if x.id == 'CA']
             atoms_created_structure = [x for x in created_structure.get_atoms() if x.id == 'CA']
 
             # they should have the same length for superimposition
-            if len(atoms_structure)==len(atoms_created_structure):
+            if len(atoms_structure) == len(atoms_created_structure):
 
                 sup = pdb.Superimposer()
                 sup.set_atoms(atoms_structure, atoms_created_structure)
@@ -386,13 +386,7 @@ def structure_in_created_structures(structure, created_structures):
     return False
 
 
-
-
-
-
-
-
-def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), tried_operations=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list()):
+def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), tried_operations=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list()):
 
     """This function builds a complex from a set of templates """
 
@@ -498,17 +492,17 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_bran
                             for x in clashing_chains:
                                 non_brancheable_clashes.add((added_chain.id, x.split('|||')[1]))
 
-                            # add the chaing that was clashing:
+                            # add the chain that was clashing:
                             branch_new_str[0].add(added_chain)
 
                             # check if the branch_new_str is not in tried_branch_structures:
-                            if not structure_in_created_structures(branch_new_str,tried_branch_structures):
+                            if not structure_in_created_structures(branch_new_str, tried_branch_structures):
 
                                 # add this branch to the ones already tested:
                                 tried_branch_structures.append(branch_new_str)
 
                                 # create a new structure based on this branch:
-                                build_complex(branch_new_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes,
+                                build_complex(saved_models, branch_new_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes,
                                               rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures)
 
     if something_added:
@@ -518,32 +512,34 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_bran
         else:
             set_this_is_a_branch=False
 
-        build_complex(current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_complex_recursion=True, this_is_a_branch=set_this_is_a_branch, non_brancheable_clashes=non_brancheable_clashes,
+        build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_complex_recursion=True, this_is_a_branch=set_this_is_a_branch, non_brancheable_clashes=non_brancheable_clashes,
                       rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures)
 
     else:
-        # we go through all the chains of the structure and rename them alphabetically
-        final_chains = list(current_str.get_chains())  # list of chain objects
-        chain_alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
-                          "T", "U", "V", "W", "X", "Y", "Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o",
-                          "p","q","r","s","t","u","v","w","x","y","z","1","2","3","4","5","6","7","8","9","0"]
-        alphabet_pos = 0
-        for final_chain in final_chains:
-            final_chain.id = chain_alphabet[alphabet_pos]
-            alphabet_pos += 1
+        print("saving model")
+        saved_models.append(current_str)
+    #     # we go through all the chains of the structure and rename them alphabetically
+    #     final_chains = list(current_str.get_chains())  # list of chain objects
+    #     chain_alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
+    #                       "T", "U", "V", "W", "X", "Y", "Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o",
+    #                       "p","q","r","s","t","u","v","w","x","y","z","1","2","3","4","5","6","7","8","9","0"]
+    #     alphabet_pos = 0
+    #     for final_chain in final_chains:
+    #         final_chain.id = chain_alphabet[alphabet_pos]
+    #         alphabet_pos += 1
+    #
+    #     # then we can finally save the obtained structure object into a pdb file
+    #     written_id = 0
+    #     PDB_name = 'model_' + str(written_id) + '.pdb'
+    #     while PDB_name in os.listdir('./Output_models/'):
+    #         written_id += 1
+    #         PDB_name = 'model_'+str(written_id)+'.pdb'
+    #
+    #     io = pdb.PDBIO()
+    #     io.set_structure(current_str)
+    #     io.save('./Output_models/'+PDB_name)
 
-        # then we can finally save the obtained structure object into a pdb file
-        written_id = 0
-        PDB_name = 'model_' + str(written_id) + '.pdb'
-        while PDB_name in os.listdir('./Output_models/'):
-            written_id += 1
-            PDB_name = 'model_'+str(written_id)+'.pdb'
-
-        io = pdb.PDBIO()
-        io.set_structure(current_str)
-        io.save('./Output_models/'+PDB_name)
-
-    return
+    return saved_models
 
 
 if __name__ == "__main__":
