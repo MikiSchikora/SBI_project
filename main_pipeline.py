@@ -116,5 +116,5 @@ for filename1 in os.listdir(Templates_dir):
     rec_level = 0  # the recursivity level
 
     # then we call the function 'build_complex'
-    final_model = func.build_complex(current_structure, Templates_dir, PDB_info, Seq_to_filenames)
+    func.build_complex(current_structure, Templates_dir, PDB_info, Seq_to_filenames)
     break
