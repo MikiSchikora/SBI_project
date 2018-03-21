@@ -51,11 +51,15 @@ if options.input:
     if os.path.isfile(options.input):
 
         # when the input is a file you have to generate all the interacting pairs, rotated and translated
-        if options.input.split('.')[-1] != 'pdb':  # OTHER EXTENSIONS??????????
-            raise EnvironmentError('The provided complex has to be a PDB file')
+        if options.input.split('.')[-1] == 'pdb':  # OTHER EXTENSIONS??????????
+            filetype = 'PDB'
+        elif options.input.split('.')[-1] == 'cif':
+            filetype = 'CIF'
+        else:
+            raise EnvironmentError('The provided complex has to be a PDB or mmCIF file')
 
         Templates_dir = './TEMPLATES/'
-        func.Generate_pairwise_subunits_from_pdb(options.input, Templates_dir)
+        func.Generate_pairwise_subunits_from_pdb(options.input, Templates_dir, filetype)
 
     elif os.path.isdir(options.input):
         Templates_dir = options.input
