@@ -15,14 +15,17 @@ import rmsd
 import copy as cp
 
 
-def Generate_pairwise_subunits_from_pdb(pdb_file_path, Templates_dir):
+def Generate_pairwise_subunits_from_pdb(pdb_file_path, TEMPLATES_path, file_type):
     """This function takes an existing complex and fragments it into each of the pairwise interactions between subunits.
     pdb_file_path is the path where the complex PDB is
     It does not consider nucleic acid sequences, as this is only for testing the program on different complexes"""
 
-    TEMPLATES_path = Templates_dir
+    num_file = 0
 
-    parser = pdb.PDBParser(PERMISSIVE=1)
+    if file_type == 'PDB':
+        parser = pdb.PDBParser(PERMISSIVE=1)
+    else:  # !!!
+        parser = pdb.MMCIFParser()
 
     structure = parser.get_structure('pdb_name', pdb_file_path)
 
@@ -68,12 +71,23 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path, Templates_dir):
                 if chains_interacting == 1:
 
                     # create a structure object
-                    ID = chain1.id + '_and_' + chain2.id
+                    ID = str(num_file)
+                    num_file += 1
                     new_structure = pdb_struct.Structure(ID)
 
                     new_model = pdb_model.Model(0)
                     new_model.add(copy.deepcopy(chain1))
                     new_model.add(copy.deepcopy(chain2))
+
+                    # check that the chain.id is correct (only 1 char)
+                    # if it has 2 chars, change them to lowercase ('a' and 'b')
+                    for new_chain in new_model.get_chains():
+                        if len(new_chain.id) == 2:
+                            if "a" in new_model:
+                                new_chain.id = "b"
+                            else:
+                                new_chain.id = "a"
+
                     new_structure.add(new_model)
 
                     # move the coordinates of the structure to simulate what would happen if they were coming from different files
