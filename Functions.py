@@ -232,7 +232,7 @@ def is_Steric_clash(structure, rotating_chain, distance_for_clash=1):
         RMSD = rmsd.kabsch_rmsd(common_atoms_s1, common_atoms_s2)
         #print("clash chain: ", clash_chain, " rotating chain: ", rotating_chain, RMSD)
 
-        if RMSD <= 2:
+        if RMSD <= 2.0:
             # it is the same chain
             val_to_return =  2
 
@@ -292,6 +292,7 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
 
     # first argument is fixed, second is moving. both are lists of Atom objects
     sup.set_atoms(common_atoms_s1, common_atoms_s2)
+    rms = sup.rms
     # print(sup.rotran)
     # print(sup.rms)
 
@@ -302,7 +303,7 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
     added = 0
     clash, clashing_chains = is_Steric_clash(curr_struct, moving_chain)
 
-    if not clash:
+    if not clash and rms<=3.0:
         my_id = moving_chain.id
         chain_names = [x.id for x in curr_struct[0].get_chains()]
         while added == 0:
@@ -331,20 +332,65 @@ def generate_new_permutations(all_files,filename):
 
     return(new_permutations)
 
+def structure_in_created_structures(structure, created_structures):
 
-def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), tried_operations=set(), rec_level_branch=0, rec_level_complex=0):
+    """ This function asks if the structure (with many chains) is already in  created_structures (a list of structures). returning a boolean if so"""
 
-    """This function builds a complex from a set of templates"""
+    # Get the ids of the chains in structure
+
+    chain_ids_structure = tuple(sorted([x.id.split('|||')[1] for x in structure.get_chains()]))
+    #chain_ids_structure = tuple(sorted([x.id for x in structure.get_chains()]))
+
+    # loop through each of the contents of created_structures:
+    for created_structure in created_structures:
+
+        # get the chains of created_structure
+        chain_ids_created_structure = tuple(sorted([x.id.split('|||')[1] for x in created_structure.get_chains()]))
+        #chain_ids_created_structure = tuple(sorted([x.id for x in created_structure.get_chains()]))
+
+        print(chain_ids_structure, chain_ids_created_structure)
+
+        # ask if the number of each and ids of the chains are the same:
+        if chain_ids_structure==chain_ids_created_structure:
+
+            # try to make the superimposition of the two structures:
+
+            # define each of the atoms:
+            atoms_structure = [x for x in structure.get_atoms() if x.id=='CA']
+            atoms_created_structure = [x for x in created_structure.get_atoms() if x.id == 'CA']
+
+            # they should have the same length for superimposition
+            if len(atoms_structure)==len(atoms_created_structure):
+
+                sup = pdb.Superimposer()
+                sup.set_atoms(atoms_structure, atoms_created_structure)
+
+                if sup.rms <= 3:
+                    return True
+
+    # if you couldn't find any overlap return False
+    return False
+
+
+
+
+
+
+
+
+def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), tried_operations=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list()):
+
+    """This function builds a complex from a set of templates """
 
     # update the rec_level:
 
     if this_is_a_branch:
         rec_level_branch += 1
-        print('BRANCH LEVEL: ',rec_level_branch)
 
     if this_is_a_complex_recursion:
         rec_level_complex += 1
-        print('COMPLEX LEVEL: ', rec_level_complex)
+
+    print('BRANCH LEVEL: ', rec_level_branch, 'COMPLEX LEVEL: ', rec_level_complex)
 
     # a parser that is going to be used many times:
     p = pdb.PDBParser(PERMISSIVE=1)
@@ -414,6 +460,7 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_bran
 
                             clash_ids = set([(x,added_chain.id.split('|||')[1]) for x in clashing_chains])
 
+                            # check if the clashes are not an exception
                             if len(non_brancheable_clashes.intersection(clash_ids))==0:
                                 open_branch = True
 
@@ -421,8 +468,6 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_bran
                             open_branch = True
 
                         if open_branch:
-
-                            print("opening new branch")
 
                             # set the id of the chain you were trying to add:
                             added_chain = cp.deepcopy(added_chain)
@@ -442,11 +487,25 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_bran
                             # add the chaing that was clashing:
                             branch_new_str[0].add(added_chain)
 
-                            # create a new structure based on this branch:
-                            build_complex(branch_new_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes)
+                            # check if the branch_new_str is not in tried_branch_structures:
+                            if not structure_in_created_structures(branch_new_str,tried_branch_structures):
+
+                                # add this branch to the ones already tested:
+                                tried_branch_structures.append(branch_new_str)
+
+                                # create a new structure based on this branch:
+                                build_complex(branch_new_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes,
+                                              rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures)
 
     if something_added:
-        build_complex(current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_complex_recursion=True, non_brancheable_clashes=non_brancheable_clashes)
+
+        if this_is_a_branch:
+            set_this_is_a_branch=True
+        else:
+            set_this_is_a_branch=False
+
+        build_complex(current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_complex_recursion=True, this_is_a_branch=set_this_is_a_branch, non_brancheable_clashes=non_brancheable_clashes,
+                      rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures)
 
     else:
         # we go through all the chains of the structure and rename them alphabetically
@@ -466,11 +525,23 @@ def build_complex(current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_bran
             written_id += 1
             PDB_name = 'model_'+str(written_id)+'.pdb'
 
-        print('printing '+PDB_name)
         io = pdb.PDBIO()
         io.set_structure(current_str)
         io.save('./Output_models/'+PDB_name)
 
     return
 
+
+if __name__ == "__main__":
+
+    # this code is executed when this is called as a script
+
+    #parser = pdb.PDBParser(PERMISSIVE=1)
+    #structure1 = parser.get_structure('pdb_name', './3kuy.pdb')
+    #structure2 = parser.get_structure('pdb_name', './3kuy.pdb')
+
+    #created_structures = [structure1,structure1]
+
+    #print(structure_in_created_structures(structure1, created_structures))
+     pass
 
