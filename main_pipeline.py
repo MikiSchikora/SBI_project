@@ -5,11 +5,13 @@ import Functions as func
 import Bio.PDB as pdb
 import argparse
 
+
 class TwoChainException(Exception):
     def __init__(self, file):
         self.file = file
+
     def __str__(self):
-        return "Input file %s does not have 2 chains" %(self.file)
+        return "Input file %s does not have 2 chains" % self.file
 
 
 parser = argparse.ArgumentParser(description="This program does BLA BLA BLA")  # WRITE DESCRIPTION!!!!!
@@ -48,16 +50,16 @@ parser.add_argument('-exh', '--exhaustive',
    default=False,
    help="Try all the possibilities. It may take a long time!")
 
-
 options = parser.parse_args()
 
 # Parse the input arguments:
 if options.input:
+
     # process the input
     if os.path.isfile(options.input):
 
         # when the input is a file you have to generate all the interacting pairs, rotated and translated
-        if options.input.split('.')[-1] == 'pdb':  # OTHER EXTENSIONS??????????
+        if options.input.split('.')[-1] == 'pdb' or 'ent':  # OTHER EXTENSIONS??????????
             filetype = 'PDB'
         elif options.input.split('.')[-1] == 'cif':
             filetype = 'CIF'
@@ -78,6 +80,8 @@ else:
 
 # define the output, if it is not specified, then it is the default
 output = options.outputdir
+if not os.path.exists(output):
+    os.makedirs(output)
 
 # handle multifasta file input
 # a file containing the sequences of the subunits to include. This is mandatory for any chain that is not a random DNA seuqnce.
@@ -121,8 +125,6 @@ for filename1 in os.listdir(Templates_dir):
     # NOTE: all the chains, but the initial 2, in the current_structure will have this naming for a proper working of the code:
         # (A|||H2A3_B|||AGS6G), that corresponds to (chain_accession|||chain_id|||random_id)
 
-    # initialize some global vars
-
     # tried_operations = set() # a set containing the tried operations (chain1_full_id, filename2, rotating_chain_accession)
     rec_level = 0  # the recursivity level
 
@@ -149,10 +151,10 @@ for final_model in final_models:
     # then we can finally save the obtained structure object into a pdb file
     written_id = 0
     PDB_name = 'model_' + str(written_id) + '.pdb'
-    while PDB_name in os.listdir('./Output_models/'):
+    while PDB_name in os.listdir(output):
         written_id += 1
         PDB_name = 'model_'+str(written_id)+'.pdb'
 
     io = pdb.PDBIO()
     io.set_structure(final_model)
-    io.save('./Output_models/'+PDB_name)
+    io.save(output+PDB_name)
