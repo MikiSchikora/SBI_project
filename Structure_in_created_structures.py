@@ -28,31 +28,6 @@ def get_atom_list_from_res_list(reslist):
                 atomlist.append(atom)
     return atomlist
 
-def hello():
-
-    res_chain1 = list(curr_struct[0][eq_chain1.id].get_residues())
-    res_chain2 = list(struct2[0][eq_chain2.id].get_residues())
-
-    # get the atoms of the previous list, ONLY belonging to common RESIDUES! to be then able to superimpose
-    # so first we obtain a list of the common residues
-    common_res_s1 = get_list_of_common_res(res_chain1, res_chain2)
-    common_res_s2 = get_list_of_common_res(res_chain2, res_chain1)
-
-    # then we obtain a list of atom objects to use it later
-    common_atoms_s1 = get_atom_list_from_res_list(common_res_s1)
-    common_atoms_s2 = get_atom_list_from_res_list(common_res_s2)
-
-    # use the Superimposer
-    sup = pdb.Superimposer()
-
-    # first argument is fixed, second is moving. both are lists of Atom objects
-    sup.set_atoms(common_atoms_s1, common_atoms_s2)
-    rms = sup.rms
-    # print(sup.rotran)
-    # print(sup.rms)
-
-    # rotate moving atoms
-    sup.apply(list(struct2[0][moving_chain.id].get_atoms()))
 
 
 def structure_in_created_structures(structure, created_structures):
@@ -156,8 +131,8 @@ def structure_in_created_structures(structure, created_structures):
 
 # check:
 parser = pdb.PDBParser(PERMISSIVE=1)
-structure1 = parser.get_structure('pdb_name', './TEMPLATES/A_and_B.pdb')
-cretaed_structures = [copy.deepcopy(structure1)]
+structure1 = parser.get_structure('pdb_name', './TEMPLATES/C_and_D.pdb')
+cretaed_structures = [parser.get_structure('pdb_name', './TEMPLATES/G_and_H.pdb')]
 
 
 a = structure_in_created_structures(structure1,cretaed_structures)
