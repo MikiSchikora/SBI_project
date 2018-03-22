@@ -24,7 +24,7 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path, TEMPLATES_path, file_type
 
     if file_type == 'PDB':
         parser = pdb.PDBParser(PERMISSIVE=1)
-    else:  # !!!
+    else:
         parser = pdb.MMCIFParser()
 
     structure = parser.get_structure('pdb_name', pdb_file_path)
@@ -366,6 +366,8 @@ def structure_in_created_structures(structure, created_structures):
         # ask if the number of each and ids of the chains are the same:
         if chain_ids_structure == chain_ids_created_structure:
 
+            print("chain ids struct and created: SAME")
+
             # try to make the superimposition of the two structures:
 
             # define each of the atoms:
@@ -379,9 +381,11 @@ def structure_in_created_structures(structure, created_structures):
                 sup.set_atoms(atoms_structure, atoms_created_structure)
 
                 if sup.rms <= 3:
+                    print("superimposing struct and created: SAME")
                     return True
 
     # if you couldn't find any overlap return False
+    print("superimposing struct and created: NOT THE SAME")
     return False
 
 
@@ -516,6 +520,8 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
     else:
         print("saving model")
         saved_models.append(current_str)
+        print("saved models: ", saved_models)
+
     #     # we go through all the chains of the structure and rename them alphabetically
     #     final_chains = list(current_str.get_chains())  # list of chain objects
     #     chain_alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",

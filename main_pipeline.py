@@ -1,7 +1,7 @@
 # This is the main script for modelling a complex from a set of Pairwise interactions
 
 import os
-import Functions_marina as func
+import Functions as func
 import Bio.PDB as pdb
 import argparse
 
@@ -124,6 +124,10 @@ for filename1 in os.listdir(Templates_dir):
 
 for final_model in final_models:
     # we go through all the chains of the structure and rename them alphabetically
+    final_model.id = '_'.join([str(x.id) for x in final_model.get_chains()])
+
+    print(final_model.id)
+
     final_chains = list(final_model.get_chains())  # list of chain objects
     chain_alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
                       "T", "U", "V", "W", "X", "Y", "Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o",
@@ -139,6 +143,7 @@ for final_model in final_models:
     while PDB_name in os.listdir('./Output_models/'):
         written_id += 1
         PDB_name = 'model_'+str(written_id)+'.pdb'
+
 
     io = pdb.PDBIO()
     io.set_structure(final_model)
