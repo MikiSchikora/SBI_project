@@ -110,7 +110,7 @@ if options.stoich:
     else:
         raise Exception("You have to provide a MULTIFASTA to link ID and sequence if you want stoichiometry to be considered.")
 else:
-    stoich_file = None
+    stoich_dict = None
 
 number_subunits_file = './subunits_num.tbl'  # a file containing the number of subunits, if known
 
@@ -120,6 +120,7 @@ number_subunits_file = './subunits_num.tbl'  # a file containing the number of s
 # Uniq_seqs is a set with all the unique IDs
 PDB_info, Seq_to_filenames = func.Generate_PDB_info(Templates_dir, subunits_seq_file)
 
+print(PDB_info)
 # initialise PDB files parser
 p = pdb.PDBParser(PERMISSIVE=1)
 
@@ -143,8 +144,8 @@ for filename1 in os.listdir(Templates_dir):
         # (A|||H2A3_B|||AGS6G), that corresponds to (chain_accession|||chain_id|||random_id)
 
     # then we call the function 'build_complex'
-    final_models += func.build_complex(final_models, current_structure, Templates_dir, PDB_info, Seq_to_filenames, stoich=stoich_dict)
-
+    final_models = func.build_complex(final_models, current_structure, Templates_dir, PDB_info, Seq_to_filenames, stoich=stoich_dict)
+    break
 
 if len(final_models) == 0:
     if options.stoich:

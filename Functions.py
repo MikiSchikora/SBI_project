@@ -353,85 +353,89 @@ def structure_in_created_structures(structure, created_structures):
 
     # Get the ids of the chains in structure
     chain_ids_structure = tuple(sorted([x.id.split('|||')[1] for x in structure.get_chains()]))
-    #chain_ids_structure = tuple(sorted([x.id for x in structure.get_chains()]))
 
     # loop through each of the contents of created_structures:
     for created_structure in created_structures:
 
         # get the chains of created_structure
         chain_ids_created_structure = tuple(sorted([x.id.split('|||')[1] for x in created_structure.get_chains()]))
-        #chain_ids_created_structure = tuple(sorted([x.id for x in created_structure.get_chains()]))
 
         # ask if the number of each and ids of the chains are the same:
         if chain_ids_structure == chain_ids_created_structure:
 
-            # create a list of the possible partners
-            possible_partners = list(chain_ids_created_structure)
+            # pick one chain in structure to compare with the chains in created
+            chain_str = list(structure.get_chains())[0]
 
-            # loop through all the chains in structure
-            for chain_str in structure.get_chains():
+            id_str = chain_str.id.split('|||')[1]
 
-                # a boolean that indicates if this chain in structure have a partner in created_strcuture
-                chain_has_a_partner = False
+            # try to find a partner in created_structure:
+            for chain_created_str in created_structure.get_chains():
 
-                id_str = chain_str.id.split('|||')[1]
-                #id_str = chain_str.id
+                id_created_str = chain_created_str.id.split('|||')[1]
 
-                # try to find a partner in created_structure:
-                for chain_created_str in created_structure.get_chains():
+                # if they have the same id they are potential partners. The id_created_str has also to be avaliable in possible_partners
+                if id_str == id_created_str:
 
-                    id_created_str = chain_created_str.id.split('|||')[1]
-                    #id_created_str = chain_created_str.id
+                    # get list of residues:
+                    res_chain1 = list(chain_str.get_residues())
+                    res_chain2 = list(chain_created_str.get_residues())
 
-                    # if they have the same id they are potential partners. The id_created_str has also to be avaliable in possible_partners
-                    if id_str==id_created_str and id_created_str in possible_partners:
+                    # get the atoms of the previous list, ONLY belonging to common RESIDUES! to be then able to superimpose
+                    # so first we obtain a list of the common residues
+                    common_res_s1 = get_list_of_common_res(res_chain1, res_chain2)
+                    common_res_s2 = get_list_of_common_res(res_chain2, res_chain1)
 
-                        # align them:
-                        res_chain1 = list(chain_str.get_residues())
-                        res_chain2 = list(chain_created_str.get_residues())
+                    # then we obtain a list of atom objects to use it later
+                    common_atoms_s1 = get_atom_list_from_res_list(common_res_s1)
+                    common_atoms_s2 = get_atom_list_from_res_list(common_res_s2)
 
-                        # get the atoms of the previous list, ONLY belonging to common RESIDUES! to be then able to superimpose
-                        # so first we obtain a list of the common residues
-                        common_res_s1 = get_list_of_common_res(res_chain1, res_chain2)
-                        common_res_s2 = get_list_of_common_res(res_chain2, res_chain1)
+                    # some molecules don't have CA, like DNA or water molecules
+                    if len(common_atoms_s1) > 0:
 
-                        # then we obtain a list of atom objects to use it later
-                        common_atoms_s1 = get_atom_list_from_res_list(common_res_s1)
-                        common_atoms_s2 = get_atom_list_from_res_list(common_res_s2)
+                        # use the Superimposer
+                        sup = pdb.Superimposer()
 
-                        rms = 100 # initialize the rms
+                        # first argument is fixed, second is moving. both are lists of Atom objects
+                        sup.set_atoms(common_atoms_s2, common_atoms_s1)
 
-                        # some molecules don't have CA, like DNA or water molecules
-                        if len(common_atoms_s1)>0:
-
-                            # use the Superimposer
-                            sup = pdb.Superimposer()
-
-                            # first argument is fixed, second is moving. both are lists of Atom objects
-                            sup.set_atoms(common_atoms_s1, common_atoms_s2)
-                            rms = sup.rms
-
-                        # if it is a partner
-                        if rms <= 1.0:
-
-                            chain_has_a_partner = True
-
-                            # delete this chain_created_str as it already has a partner
-                            possible_partners.remove(id_created_str)
-
-                            # exit the partner searching
+                        # if I have superimposed same ID but different structure
+                        if sup.rms > 2.0:
                             break
 
-                # go to the next  created_structure if a chain has no partner:
-                if not chain_has_a_partner:
-                    break
+                        # apply rotation to whole common structure
+                        sup.apply(list(structure.get_atoms()))
 
-            # determine that structure_is_matching if you have an empty possible_partners
-            if len(possible_partners)==0:
-                return True # this is only going to be true at the end if this is the last iteration
+                        partners = set()
+
+                        for searching_partner in created_structure.get_chains():
+                            for possible_partner in structure.get_chains():
+                                if possible_partner.id.split('|||')[1] == searching_partner.id.split('|||')[1] and possible_partner not in partners:
+                                    # get list of residues:
+                                    res_partner1 = list(searching_partner.get_residues())
+                                    res_partner2 = list(possible_partner.get_residues())
+
+                                    # get the atoms of the previous list, ONLY belonging to common RESIDUES! to be then able to superimpose
+                                    # so first we obtain a list of the common residues
+                                    common_res_p1 = get_list_of_common_res(res_partner1, res_partner2)
+                                    common_res_p2 = get_list_of_common_res(res_partner2, res_partner1)
+
+                                    # then we obtain a list of coordinates
+                                    common_coords_p1 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_p1)])
+                                    common_coords_p2 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_p2)])
+
+                                    rms = rmsd.kabsch_rmsd(common_coords_p2, common_coords_p1)
+                                    if rms <= 2.0:
+                                        partners.add(possible_partner)
+
+                        if len(partners) == len(list(created_structure.get_chains())):
+
+                            # print("whole superimposition: SAME")
+                            return True  # ????????
 
     # if you didn't find any match return false:
+    # print("current str NOT in created")
     return False
+
 
 class TwoChainException(Exception):
     def __init__(self, file):
@@ -444,7 +448,6 @@ class TwoChainException(Exception):
 def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), tried_operations=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list(), stoich=None):
 
     """This function builds a complex from a set of templates """
-
     # update the rec_level:
 
     if this_is_a_branch:
@@ -453,7 +456,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
     if this_is_a_complex_recursion:
         rec_level_complex += 1
 
-    print('BRANCH LEVEL: ', rec_level_branch, 'COMPLEX LEVEL: ', rec_level_complex)
+    # print('BRANCH LEVEL: ', rec_level_branch, 'COMPLEX LEVEL: ', rec_level_complex)
 
     # a parser that is going to be used many times:
     p = pdb.PDBParser(PERMISSIVE=1)
@@ -597,11 +600,13 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
 
             if len(divisors) == 1 and not structure_in_created_structures(current_str, saved_models):
                 saved_models.append(current_str)
-                print("saved models: ", saved_models)
+                print("saved models: ", list(str(x.id) for x in current_str.get_chains()))
+                print("all saved models: ", saved_models)
 
         elif not structure_in_created_structures(current_str, saved_models):
             saved_models.append(current_str)
-            print("saved models: ", saved_models)
+            print("saved models: ", list(str(x.id) for x in current_str.get_chains()))
+            print("all saved models: ", saved_models)
 
     return saved_models
 
