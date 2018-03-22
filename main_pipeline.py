@@ -1,17 +1,11 @@
 # This is the main script for modelling a complex from a set of Pairwise interactions
 
 import os
+import sys
+sys.path.append(os.curdir)
 import Functions as func
 import Bio.PDB as pdb
 import argparse
-
-
-class TwoChainException(Exception):
-    def __init__(self, file):
-        self.file = file
-
-    def __str__(self):
-        return "Input file %s does not have 2 chains" % self.file
 
 
 parser = argparse.ArgumentParser(description="This program does BLA BLA BLA")  # WRITE DESCRIPTION!!!!!
@@ -19,7 +13,7 @@ parser = argparse.ArgumentParser(description="This program does BLA BLA BLA")  #
 parser.add_argument('-o', '--output-dir',
    dest="outputdir",
    action="store",
-   default="./output_models",
+   default="./output_models/",
    help="output directory")
 
 
@@ -102,13 +96,17 @@ else:
 
 if options.stoich:
     if options.sequences:
-        stoich_file = options.sequences
+        stoich_file = options.stoich
         fd = open(stoich_file)
         stoich_dict = {}
         for line in fd:
             line = line.strip()
-            seq_id, sto = line.split("\t")
-            stoich_dict[seq_id] = sto
+            try:
+                seq_id, sto = line.split("\t")
+            except ValueError:
+                raise Exception("Your stoichiometry file does not have the correct format")
+
+            stoich_dict[seq_id] = int(sto)
     else:
         raise Exception("You have to provide a MULTIFASTA to link ID and sequence if you want stoichiometry to be considered.")
 else:
@@ -134,7 +132,7 @@ for filename1 in os.listdir(Templates_dir):
     current_structure = p.get_structure("pr1", Templates_dir + filename1)
 
     if len(list(current_structure.get_chains())) != 2:
-        raise TwoChainException(filename1)
+        raise func.TwoChainException(filename1)
 
     # change the chain id names
     for chain in current_structure.get_chains():
@@ -144,18 +142,15 @@ for filename1 in os.listdir(Templates_dir):
     # NOTE: all the chains, but the initial 2, in the current_structure will have this naming for a proper working of the code:
         # (A|||H2A3_B|||AGS6G), that corresponds to (chain_accession|||chain_id|||random_id)
 
-    # tried_operations = set() # a set containing the tried operations (chain1_full_id, filename2, rotating_chain_accession)
-    rec_level = 0  # the recursivity level
-
     # then we call the function 'build_complex'
-    final_models = func.build_complex(final_models, current_structure, Templates_dir, PDB_info, Seq_to_filenames, stoich=stoich_dict)
-    break
+    final_models += func.build_complex(final_models, current_structure, Templates_dir, PDB_info, Seq_to_filenames, stoich=stoich_dict)
+
 
 if len(final_models) == 0:
     if options.stoich:
-        sys.stderr.write("No complex could be obtained with your specified stoichiometry")
+        sys.stderr.write("No complex could be obtained with your specified stoichiometry\n")
     else:
-        sys.stderr.write("No complex could be obtained")
+        sys.stderr.write("No complex could be obtained\n")
 
 
 for final_model in final_models:

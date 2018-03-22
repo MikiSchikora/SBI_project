@@ -347,44 +347,98 @@ def structure_in_created_structures(structure, created_structures):
 
     """ This function asks if the structure (with many chains) is already in  created_structures (a list of structures). returning a boolean if so"""
 
-    # Get the ids of the chains in structure
+    # make a deepcopy of these objects
+    structure = copy.deepcopy(structure)
+    created_structures = copy.deepcopy(created_structures)
 
+    # Get the ids of the chains in structure
     chain_ids_structure = tuple(sorted([x.id.split('|||')[1] for x in structure.get_chains()]))
-    # chain_ids_structure = tuple(sorted([x.id for x in structure.get_chains()]))
+    #chain_ids_structure = tuple(sorted([x.id for x in structure.get_chains()]))
 
     # loop through each of the contents of created_structures:
     for created_structure in created_structures:
 
         # get the chains of created_structure
         chain_ids_created_structure = tuple(sorted([x.id.split('|||')[1] for x in created_structure.get_chains()]))
-        # chain_ids_created_structure = tuple(sorted([x.id for x in created_structure.get_chains()]))
-
-        # print(chain_ids_structure, chain_ids_created_structure)
+        #chain_ids_created_structure = tuple(sorted([x.id for x in created_structure.get_chains()]))
 
         # ask if the number of each and ids of the chains are the same:
         if chain_ids_structure == chain_ids_created_structure:
 
-            print("chain ids struct and created: SAME")
+            # create a list of the possible partners
+            possible_partners = list(chain_ids_created_structure)
 
-            # try to make the superimposition of the two structures:
+            # loop through all the chains in structure
+            for chain_str in structure.get_chains():
 
-            # define each of the atoms:
-            atoms_structure = [x for x in structure.get_atoms() if x.id == 'CA']
-            atoms_created_structure = [x for x in created_structure.get_atoms() if x.id == 'CA']
+                # a boolean that indicates if this chain in structure have a partner in created_strcuture
+                chain_has_a_partner = False
 
-            # they should have the same length for superimposition
-            if len(atoms_structure) == len(atoms_created_structure):
+                id_str = chain_str.id.split('|||')[1]
+                #id_str = chain_str.id
 
-                sup = pdb.Superimposer()
-                sup.set_atoms(atoms_structure, atoms_created_structure)
+                # try to find a partner in created_structure:
+                for chain_created_str in created_structure.get_chains():
 
-                if sup.rms <= 3:
-                    print("superimposing struct and created: SAME")
-                    return True
+                    id_created_str = chain_created_str.id.split('|||')[1]
+                    #id_created_str = chain_created_str.id
 
-    # if you couldn't find any overlap return False
-    print("superimposing struct and created: NOT THE SAME")
+                    # if they have the same id they are potential partners. The id_created_str has also to be avaliable in possible_partners
+                    if id_str==id_created_str and id_created_str in possible_partners:
+
+                        # align them:
+                        res_chain1 = list(chain_str.get_residues())
+                        res_chain2 = list(chain_created_str.get_residues())
+
+                        # get the atoms of the previous list, ONLY belonging to common RESIDUES! to be then able to superimpose
+                        # so first we obtain a list of the common residues
+                        common_res_s1 = get_list_of_common_res(res_chain1, res_chain2)
+                        common_res_s2 = get_list_of_common_res(res_chain2, res_chain1)
+
+                        # then we obtain a list of atom objects to use it later
+                        common_atoms_s1 = get_atom_list_from_res_list(common_res_s1)
+                        common_atoms_s2 = get_atom_list_from_res_list(common_res_s2)
+
+                        rms = 100 # initialize the rms
+
+                        # some molecules don't have CA, like DNA or water molecules
+                        if len(common_atoms_s1)>0:
+
+                            # use the Superimposer
+                            sup = pdb.Superimposer()
+
+                            # first argument is fixed, second is moving. both are lists of Atom objects
+                            sup.set_atoms(common_atoms_s1, common_atoms_s2)
+                            rms = sup.rms
+
+                        # if it is a partner
+                        if rms <= 1.0:
+
+                            chain_has_a_partner = True
+
+                            # delete this chain_created_str as it already has a partner
+                            possible_partners.remove(id_created_str)
+
+                            # exit the partner searching
+                            break
+
+                # go to the next  created_structure if a chain has no partner:
+                if not chain_has_a_partner:
+                    break
+
+            # determine that structure_is_matching if you have an empty possible_partners
+            if len(possible_partners)==0:
+                return True # this is only going to be true at the end if this is the last iteration
+
+    # if you didn't find any match return false:
     return False
+
+class TwoChainException(Exception):
+    def __init__(self, file):
+        self.file = file
+
+    def __str__(self):
+        return "Input file %s does not have 2 chains" % self.file
 
 
 def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), tried_operations=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list(), stoich=None):
@@ -452,7 +506,6 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
 
                 # check if this operation has already been tried before, and skip if so
                 operation = (chain1.id, filename2, rotating_chain.id[0])
-                print(operation)
 
                 if operation not in tried_operations:
 
@@ -525,59 +578,30 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
                       rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures, stoich=stoich)
 
     else:
-        print("saving model")
+        print("trying to save model")
 
         if stoich:
             final_stoich = {}
             for chain in current_str.get_chains():
-                final_stoich[chain.id.split('|||')[1]] += 1
+                chain_id = chain.id.split('|||')[1]
+
+                if chain_id not in final_stoich:
+                    final_stoich[chain_id] = 1
+                else:
+                    final_stoich[chain_id] += 1
 
             divisors = set()
-            for key, value in final_stoich:
+            for key, value in final_stoich.items():
                 divisor = value / stoich[key]
                 divisors.add(divisor)
 
-            if len(divisors) == 1:
+            if len(divisors) == 1 and not structure_in_created_structures(current_str, saved_models):
                 saved_models.append(current_str)
                 print("saved models: ", saved_models)
 
-        else:
+        elif not structure_in_created_structures(current_str, saved_models):
             saved_models.append(current_str)
             print("saved models: ", saved_models)
 
-    #     # we go through all the chains of the structure and rename them alphabetically
-    #     final_chains = list(current_str.get_chains())  # list of chain objects
-    #     chain_alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
-    #                       "T", "U", "V", "W", "X", "Y", "Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o",
-    #                       "p","q","r","s","t","u","v","w","x","y","z","1","2","3","4","5","6","7","8","9","0"]
-    #     alphabet_pos = 0
-    #     for final_chain in final_chains:
-    #         final_chain.id = chain_alphabet[alphabet_pos]
-    #         alphabet_pos += 1
-    #
-    #     # then we can finally save the obtained structure object into a pdb file
-    #     written_id = 0
-    #     PDB_name = 'model_' + str(written_id) + '.pdb'
-    #     while PDB_name in os.listdir('./Output_models/'):
-    #         written_id += 1
-    #         PDB_name = 'model_'+str(written_id)+'.pdb'
-    #
-    #     io = pdb.PDBIO()
-    #     io.set_structure(current_str)
-    #     io.save('./Output_models/'+PDB_name)
-
     return saved_models
 
-
-if __name__ == "__main__":
-
-    # this code is executed when this is called as a script
-
-    # parser = pdb.PDBParser(PERMISSIVE=1)
-    # structure1 = parser.get_structure('pdb_name', './3kuy.pdb')
-    # structure2 = parser.get_structure('pdb_name', './3kuy.pdb')
-
-    # created_structures = [structure1,structure1]
-
-    # print(structure_in_created_structures(structure1, created_structures))
-    pass
