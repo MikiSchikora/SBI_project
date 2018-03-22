@@ -50,6 +50,13 @@ parser.add_argument('-exh', '--exhaustive',
    default=False,
    help="Try all the possibilities. It may take a long time!")
 
+
+parser.add_argument('-sto', '--stoichiometry',
+   dest="stoich",
+   action="store",
+   default=None,
+   help="Add a tabular file with sequence ID and stoichiometry")
+
 options = parser.parse_args()
 
 # Parse the input arguments:
@@ -93,8 +100,20 @@ else:
     subunits_seq_file = None
     print("NO SUBUNITS SEQ FILE")
 
+if options.stoich:
+    if options.sequences:
+        stoich_file = options.sequences
+        fd = open(stoich_file)
+        stoich_dict = {}
+        for line in fd:
+            line = line.strip()
+            seq_id, sto = line.split("\t")
+            stoich_dict[seq_id] = sto
+    else:
+        raise Exception("You have to provide a MULTIFASTA to link ID and sequence if you want stoichiometry to be considered.")
+else:
+    stoich_file = None
 
-stoichiometry_file = './stoch.tbl'  # a file containing information about the stoichiometry. This is mandatory
 number_subunits_file = './subunits_num.tbl'  # a file containing the number of subunits, if known
 
 
@@ -129,8 +148,14 @@ for filename1 in os.listdir(Templates_dir):
     rec_level = 0  # the recursivity level
 
     # then we call the function 'build_complex'
-    final_models = func.build_complex(final_models, current_structure, Templates_dir, PDB_info, Seq_to_filenames)
+    final_models = func.build_complex(final_models, current_structure, Templates_dir, PDB_info, Seq_to_filenames, stoich=stoich_dict)
     break
+
+if len(final_models) == 0:
+    if options.stoich:
+        sys.stderr.write("No complex could be obtained with your specified stoichiometry")
+    else:
+        sys.stderr.write("No complex could be obtained")
 
 
 for final_model in final_models:

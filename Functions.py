@@ -10,9 +10,7 @@ import Bio.SeqIO as Seq_IO
 from Bio import pairwise2
 import random
 import string
-import itertools as iter
 import rmsd
-import copy as cp
 
 
 def Generate_pairwise_subunits_from_pdb(pdb_file_path, TEMPLATES_path, file_type):
@@ -389,7 +387,7 @@ def structure_in_created_structures(structure, created_structures):
     return False
 
 
-def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), tried_operations=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list()):
+def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), tried_operations=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list(), stoich=None):
 
     """This function builds a complex from a set of templates """
 
@@ -409,6 +407,9 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
     # files that have to be used
     all_files = list(PDB_dict.keys())
 
+    if len(all_files) < 2:
+        raise Exception("Only one file provided: no complex can be built.")
+
     # a boolean that indicates if there's something added at this level
     something_added = False
 
@@ -427,6 +428,9 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
                 # get the structure
                 structure2 = p.get_structure("pr2", mydir + filename2)
 
+                if len(list(structure2.get_chains())) != 2:
+                    raise TwoChainException(filename2)
+
                 # change the chain id names
                 for chain in structure2.get_chains():
                     curr_id = chain.id
@@ -435,17 +439,20 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
                 for chain2 in structure2.get_chains():
                     id_chain2 = chain2.id.split('|||')[1]
 
+                    # if it is a homodimer
                     if PDB_dict[filename2][0].split('|||')[1] == PDB_dict[filename2][1].split('|||')[1]:
                         rotating_chain = structure2[0][PDB_dict[filename2][0]]
                         common_chain2 = structure2[0][PDB_dict[filename2][1]]
 
                     elif id_chain1 == id_chain2:
                         common_chain2 = chain2
+
                     else:
                         rotating_chain = chain2
 
                 # check if this operation has already been tried before, and skip if so
                 operation = (chain1.id, filename2, rotating_chain.id[0])
+                print(operation)
 
                 if operation not in tried_operations:
 
@@ -480,11 +487,11 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
                         if open_branch:
 
                             # set the id of the chain you were trying to add:
-                            added_chain = cp.deepcopy(added_chain)
+                            added_chain = copy.deepcopy(added_chain)
                             added_chain.id = added_chain.id + '|||' + create_random_chars_id(6)
 
                             # make a new branch:
-                            branch_new_str = cp.deepcopy(current_str)
+                            branch_new_str = copy.deepcopy(current_str)
 
                             # remove the chains that chains that are clashing:
                             for clashing_chain in clashing_chains:
@@ -505,7 +512,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
 
                                 # create a new structure based on this branch:
                                 build_complex(saved_models, branch_new_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes,
-                                              rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures)
+                                              rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures, stoich=stoich)
 
     if something_added:
 
@@ -515,12 +522,28 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
             set_this_is_a_branch = False
 
         build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_complex_recursion=True, this_is_a_branch=set_this_is_a_branch, non_brancheable_clashes=non_brancheable_clashes,
-                      rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures)
+                      rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures, stoich=stoich)
 
     else:
         print("saving model")
-        saved_models.append(current_str)
-        print("saved models: ", saved_models)
+
+        if stoich:
+            final_stoich = {}
+            for chain in current_str.get_chains():
+                final_stoich[chain.id.split('|||')[1]] += 1
+
+            divisors = set()
+            for key, value in final_stoich:
+                divisor = value / stoich[key]
+                divisors.add(divisor)
+
+            if len(divisors) == 1:
+                saved_models.append(current_str)
+                print("saved models: ", saved_models)
+
+        else:
+            saved_models.append(current_str)
+            print("saved models: ", saved_models)
 
     #     # we go through all the chains of the structure and rename them alphabetically
     #     final_chains = list(current_str.get_chains())  # list of chain objects
