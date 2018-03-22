@@ -5,6 +5,12 @@ import Functions as func
 import Bio.PDB as pdb
 import argparse
 
+class TwoChainException(Exception):
+    def __init__(self, file):
+        self.file = file
+    def __str__(self):
+        return "Input file %s does not have 2 chains" %(self.file)
+
 
 parser = argparse.ArgumentParser(description="This program does BLA BLA BLA")  # WRITE DESCRIPTION!!!!!
 
@@ -56,7 +62,7 @@ if options.input:
         elif options.input.split('.')[-1] == 'cif':
             filetype = 'CIF'
         else:
-            raise EnvironmentError('The provided complex has to be a PDB or mmCIF file')
+            raise Exception('The provided complex has to be a PDB or mmCIF file')
 
         Templates_dir = './TEMPLATES/'
         func.Generate_pairwise_subunits_from_pdb(options.input, Templates_dir, filetype)
@@ -65,9 +71,9 @@ if options.input:
         Templates_dir = options.input
 
     else:
-        raise EnvironmentError('You have to provide a valid input path')
+        raise Exception('You have to provide a valid input path')
 else:
-    raise IOError("No input provided")
+    raise Exception("No input provided")
 
 
 # define the output, if it is not specified, then it is the default
@@ -103,6 +109,9 @@ for filename1 in os.listdir(Templates_dir):
 
     # we start with the structure of the first pairwise interaction, this is now the current model
     current_structure = p.get_structure("pr1", Templates_dir + filename1)
+
+    if len(list(current_structure.get_chains())) != 2:
+        raise TwoChainException(filename1)
 
     # change the chain id names
     for chain in current_structure.get_chains():
