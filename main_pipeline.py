@@ -8,7 +8,7 @@ import Bio.PDB as pdb
 import argparse
 
 
-parser = argparse.ArgumentParser(description="This program does BLA BLA BLA")  # WRITE DESCRIPTION!!!!!
+parser = argparse.ArgumentParser(description="This program builds a complex from the interacting pairwise subunits")  # WRITE DESCRIPTION!!!!!
 
 parser.add_argument('-o', '--output-dir',
    dest="outputdir",
@@ -50,6 +50,13 @@ parser.add_argument('-sto', '--stoichiometry',
    action="store",
    default=None,
    help="Add a tabular file with sequence ID and stoichiometry")
+
+parser.add_argument('-n_models', '--number-of-models',
+   dest="n_models",
+   type=int,
+   action="store",
+   default=1,
+   help="This pipeline can generate several models oot of one input. With this you can indicate the number of models (an integrer) that have to be generated")
 
 options = parser.parse_args()
 
@@ -126,26 +133,27 @@ p = pdb.PDBParser(PERMISSIVE=1)
 
 final_models = []
 
-# parse file 1 and 2 and get a structure for each
-for filename1 in os.listdir(Templates_dir):
 
-    # we start with the structure of the first pairwise interaction, this is now the current model
-    current_structure = p.get_structure("pr1", Templates_dir + filename1)
+# initial filename:
+filename = os.listdir(Templates_dir)[0]
 
-    if len(list(current_structure.get_chains())) != 2:
-        raise func.TwoChainException(filename1)
+# we start with the structure of the first pairwise interaction, this is now the current model
+current_structure = p.get_structure("pr1", Templates_dir + filename)
 
-    # change the chain id names
-    for chain in current_structure.get_chains():
-        curr_id = chain.id
-        chain.id = [x for x in PDB_info[filename1] if x[0] == curr_id][0]
+if len(list(current_structure.get_chains())) != 2:
+    raise func.TwoChainException(filename)
 
-    # NOTE: all the chains, but the initial 2, in the current_structure will have this naming for a proper working of the code:
-        # (A|||H2A3_B|||AGS6G), that corresponds to (chain_accession|||chain_id|||random_id)
+# change the chain id names
+for chain in current_structure.get_chains():
+    curr_id = chain.id
+    chain.id = [x for x in PDB_info[filename] if x[0] == curr_id][0]
 
-    # then we call the function 'build_complex'
-    final_models = func.build_complex(final_models, current_structure, Templates_dir, PDB_info, Seq_to_filenames, stoich=stoich_dict)
-    break
+# NOTE: all the chains, but the initial 2, in the current_structure will have this naming for a proper working of the code:
+    # (A|||H2A3_B|||AGS6G), that corresponds to (chain_accession|||chain_id|||random_id)
+
+# then we call the function 'build_complex'
+final_models = func.build_complex(final_models, current_structure, Templates_dir, PDB_info, options.n_models, options.exhaustive, stoich=stoich_dict)
+
 
 if len(final_models) == 0:
     if options.stoich:

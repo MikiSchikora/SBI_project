@@ -445,15 +445,20 @@ class TwoChainException(Exception):
         return "Input file %s does not have 2 chains" % self.file
 
 
-def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), tried_operations=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list(), stoich=None):
+def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaustive, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), tried_operations=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list(), stoich=None):
 
     """This function builds a complex from a set of templates """
+
+    # return as soon as possible:
+    if not exhaustive and num_models==len(saved_models):
+        return saved_models
+
     # update the rec_level:
 
-    if this_is_a_branch:
+    if this_is_a_branch: # level of the recursions opened by the clash of a chain against another
         rec_level_branch += 1
 
-    if this_is_a_complex_recursion:
+    if this_is_a_complex_recursion:  # level of the recursions opened by adding subunits
         rec_level_complex += 1
 
     # print('BRANCH LEVEL: ', rec_level_branch, 'COMPLEX LEVEL: ', rec_level_complex)
@@ -461,8 +466,9 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
     # a parser that is going to be used many times:
     p = pdb.PDBParser(PERMISSIVE=1)
 
-    # files that have to be used
+    # files that have to be used. The shuffle is for generating alternative paths
     all_files = list(PDB_dict.keys())
+    random.shuffle(all_files)
 
     if len(all_files) < 2:
         raise Exception("Only one file provided: no complex can be built.")
@@ -493,82 +499,83 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
                     curr_id = chain.id
                     chain.id = [x for x in PDB_dict[filename2] if x[0] == curr_id][0]
 
-                for chain2 in structure2.get_chains():
-                    id_chain2 = chain2.id.split('|||')[1]
+                # if it is a homodimer (arbitrary set of rotating / common)
+                if PDB_dict[filename2][0].split('|||')[1] == PDB_dict[filename2][1].split('|||')[1]:
+                    rotating_chain = structure2[0][PDB_dict[filename2][0]]
+                    common_chain2 = structure2[0][PDB_dict[filename2][1]]
 
-                    # if it is a homodimer
-                    if PDB_dict[filename2][0].split('|||')[1] == PDB_dict[filename2][1].split('|||')[1]:
-                        rotating_chain = structure2[0][PDB_dict[filename2][0]]
-                        common_chain2 = structure2[0][PDB_dict[filename2][1]]
 
-                    elif id_chain1 == id_chain2:
-                        common_chain2 = chain2
 
-                    else:
-                        rotating_chain = chain2
+                else:
+                    # decide which is (rotating / common)
+                    for chain2 in structure2.get_chains():
+                        id_chain2 = chain2.id.split('|||')[1]
 
-                # check if this operation has already been tried before, and skip if so
-                operation = (chain1.id, filename2, rotating_chain.id[0])
-
-                if operation not in tried_operations:
-
-                    # tried_operations.add(operation)
-                    current_str, sth_added, clash, clashing_chains, added_chain = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2)
-
-                    # when something is added
-                    if sth_added == 1:
-
-                        # record if there has been any chain added:
-                        something_added = True
-
-                    # when there's a aberrant clash
-                    if clash == 1:
-
-                        # a branch complex will be created if the rotating chain is not one of the previously branch-opening clashing chains
-                        # or if the clashes happen against the chain that opened this branch
-
-                        open_branch = False
-
-                        if this_is_a_branch:
-
-                            clash_ids = set([(x, added_chain.id.split('|||')[1]) for x in clashing_chains])
-
-                            # check if the clashes are not an exception
-                            if len(non_brancheable_clashes.intersection(clash_ids)) == 0:
-                                open_branch = True
-
+                        if id_chain1 == id_chain2:
+                            common_chain2 = chain2
                         else:
+                            rotating_chain = chain2
+
+                # try to add the new chain to the complex
+                current_str, sth_added, clash, clashing_chains, added_chain = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2)
+
+                # when something is added, in this try
+                if sth_added == 1:
+                    # record if there has been any chain added:
+                    something_added = True
+
+                # when there's a aberrant clash
+                if clash == 1:
+
+                    # a branch complex will be created if the rotating chain is not one of the previously branch-opening clashing chains
+                    # or if the clashes happen against the chain that opened this branch
+
+                    open_branch = False
+
+                    if this_is_a_branch:
+
+                        clash_ids = set([(x, added_chain.id.split('|||')[1]) for x in clashing_chains])
+
+                        # check if the clashes are not an exception
+                        if len(non_brancheable_clashes.intersection(clash_ids)) == 0:
                             open_branch = True
 
-                        if open_branch:
+                    else:
+                        open_branch = True
 
-                            # set the id of the chain you were trying to add:
-                            added_chain = copy.deepcopy(added_chain)
-                            added_chain.id = added_chain.id + '|||' + create_random_chars_id(6)
+                    if open_branch:
 
-                            # make a new branch:
-                            branch_new_str = copy.deepcopy(current_str)
+                        # set the id of the chain you were trying to add:
+                        added_chain = copy.deepcopy(added_chain)
+                        added_chain.id = added_chain.id + '|||' + create_random_chars_id(6)
 
-                            # remove the chains that chains that are clashing:
-                            for clashing_chain in clashing_chains:
-                                branch_new_str[0].detach_child(clashing_chain)
+                        # make a new branch:
+                        branch_new_str = copy.deepcopy(current_str)
 
-                            # create a set of tuples (added_chain, clashing_chains_ids) of branch opening exceptions
-                            for x in clashing_chains:
-                                non_brancheable_clashes.add((added_chain.id, x.split('|||')[1]))
+                        # remove the chains that chains that are clashing:
+                        for clashing_chain in clashing_chains:
+                            branch_new_str[0].detach_child(clashing_chain)
 
-                            # add the chain that was clashing:
-                            branch_new_str[0].add(added_chain)
+                        # create a set of tuples (added_chain, clashing_chains_ids) of branch opening exceptions
+                        for x in clashing_chains:
+                            non_brancheable_clashes.add((added_chain.id, x.split('|||')[1]))
 
-                            # check if the branch_new_str is not in tried_branch_structures:
-                            if not structure_in_created_structures(branch_new_str, tried_branch_structures):
+                        # add the chain that was clashing:
+                        branch_new_str[0].add(added_chain)
 
-                                # add this branch to the ones already tested:
-                                tried_branch_structures.append(branch_new_str)
+                        # check if the branch_new_str is not in tried_branch_structures:
+                        if not structure_in_created_structures(branch_new_str, tried_branch_structures):
 
-                                # create a new structure based on this branch:
-                                build_complex(saved_models, branch_new_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes,
-                                              rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures, stoich=stoich)
+                            # add this branch to the ones already tested:
+                            tried_branch_structures.append(branch_new_str)
+
+                            # create a new structure based on this branch:
+                            build_complex(saved_models, branch_new_str, mydir, PDB_dict, num_models, exhaustive, this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes,
+                                          rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures, stoich=stoich)
+
+                            # return as soon as possible:
+                            if not exhaustive and num_models == len(saved_models):
+                                return saved_models
 
     if something_added:
 
@@ -577,8 +584,12 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, 
         else:
             set_this_is_a_branch = False
 
-        build_complex(saved_models, current_str, mydir, PDB_dict, Seq_to_filenames, this_is_a_complex_recursion=True, this_is_a_branch=set_this_is_a_branch, non_brancheable_clashes=non_brancheable_clashes,
+        build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaustive, this_is_a_complex_recursion=True, this_is_a_branch=set_this_is_a_branch, non_brancheable_clashes=non_brancheable_clashes,
                       rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures, stoich=stoich)
+
+        # return as soon as possible:
+        if not exhaustive and num_models == len(saved_models):
+            return saved_models
 
     else:
         print("trying to save model")
