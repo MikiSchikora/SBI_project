@@ -71,7 +71,7 @@ else:
 
 
 # define the output, if it is not specified, then it is the default
-output=options.outputdir
+output = options.outputdir
 
 # handle multifasta file input
 # a file containing the sequences of the subunits to include. This is mandatory for any chain that is not a random DNA seuqnce.
@@ -106,8 +106,8 @@ for filename1 in os.listdir(Templates_dir):
 
     # change the chain id names
     for chain in current_structure.get_chains():
-        curr_id=chain.id
-        chain.id=[x for x in PDB_info[filename1] if x[0]==curr_id][0]
+        curr_id = chain.id
+        chain.id = [x for x in PDB_info[filename1] if x[0] == curr_id][0]
 
     # NOTE: all the chains, but the initial 2, in the current_structure will have this naming for a proper working of the code:
         # (A|||H2A3_B|||AGS6G), that corresponds to (chain_accession|||chain_id|||random_id)
@@ -130,8 +130,8 @@ for final_model in final_models:
 
     final_chains = list(final_model.get_chains())  # list of chain objects
     chain_alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
-                      "T", "U", "V", "W", "X", "Y", "Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o",
-                      "p","q","r","s","t","u","v","w","x","y","z","1","2","3","4","5","6","7","8","9","0"]
+                      "T", "U", "V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
+                      "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
     alphabet_pos = 0
     for final_chain in final_chains:
         final_chain.id = chain_alphabet[alphabet_pos]
@@ -143,7 +143,6 @@ for final_model in final_models:
     while PDB_name in os.listdir('./Output_models/'):
         written_id += 1
         PDB_name = 'model_'+str(written_id)+'.pdb'
-
 
     io = pdb.PDBIO()
     io.set_structure(final_model)
