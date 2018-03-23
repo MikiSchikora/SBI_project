@@ -445,9 +445,11 @@ class TwoChainException(Exception):
         return "Input file %s does not have 2 chains" % self.file
 
 
-def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaustive, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), tried_operations=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list(), stoich=None):
+def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaustive, this_is_a_branch=False, this_is_a_complex_recursion=False, homodimer_branch_id=('',False), non_brancheable_clashes=set(), tried_operations=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list(), stoich=None):
 
     """This function builds a complex from a set of templates """
+
+    print(exhaustive,num_models)
 
     # return as soon as possible:
     if not exhaustive and num_models==len(saved_models):
@@ -460,6 +462,8 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
 
     if this_is_a_complex_recursion:  # level of the recursions opened by adding subunits
         rec_level_complex += 1
+
+    print('branch lvel: ',rec_level_branch, 'complex lvel: ',rec_level_complex)
 
     # print('BRANCH LEVEL: ', rec_level_branch, 'COMPLEX LEVEL: ', rec_level_complex)
 
@@ -501,9 +505,30 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
 
                 # if it is a homodimer (arbitrary set of rotating / common)
                 if PDB_dict[filename2][0].split('|||')[1] == PDB_dict[filename2][1].split('|||')[1]:
-                    rotating_chain = structure2[0][PDB_dict[filename2][0]]
-                    common_chain2 = structure2[0][PDB_dict[filename2][1]]
 
+                    # open a branch with one type of adding
+
+                    #save structure2 for the branch:
+                    structure2_branch = copy.deepcopy(structure2)
+                    rotating_chain = structure2_branch[0][PDB_dict[filename2][0]]
+                    common_chain2 = structure2_branch[0][PDB_dict[filename2][1]]
+                    branch_new_str = copy.deepcopy(current_str)
+
+                    #add to the complex for opening a branch:
+                    current_str, sth_added, clash, clashing_chains, added_chain = superimpose_and_rotate(chain1, common_chain2, rotating_chain, branch_new_str, structure2_branch)
+
+                    if not clash and (exhaustive or num_models>1):
+
+                        # add this branch to the ones already tested:
+                        tried_branch_structures.append(branch_new_str)
+
+                        if not structure_in_created_structures(branch_new_str, tried_branch_structures):
+                            build_complex(saved_models, branch_new_str, mydir, PDB_dict, num_models, exhaustive, homodimer_branch_id=(filename2,True), this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes,
+                                  rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures, stoich=stoich)
+
+                    # change the id of rotating / common and continue in this level:
+                    rotating_chain = structure2[0][PDB_dict[filename2][1]]
+                    common_chain2 = structure2[0][PDB_dict[filename2][0]]
 
 
                 else:
@@ -525,7 +550,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                     something_added = True
 
                 # when there's a aberrant clash
-                if clash == 1:
+                if clash == 1 and (exhaustive or num_models>1):
 
                     # a branch complex will be created if the rotating chain is not one of the previously branch-opening clashing chains
                     # or if the clashes happen against the chain that opened this branch
