@@ -63,7 +63,7 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path, TEMPLATES_path, file_type
                             except KeyError:
                                 # no CA atom, e.g. for H_NAG
                                 continue
-                            if distance < 5:
+                            if distance < 7:
                                 chains_interacting = 1
 
                 if chains_interacting == 1:
@@ -179,8 +179,8 @@ def Generate_PDB_info(Templates_dir, subunits_seq_file, min_identity_between_cha
             else:
                 Seq_id, Seqs[Seq_id], Seq_to_filenames[Seq_id] = add_new_seqid_to_dicts(aaSeq, Seqs, Seq_to_filenames, 6)
 
-            # if my current seq doesn't fit anything, it may be DNA or RNA, not included in the provided fasta file
-            if Seq_id is None and all(i in 'ACUTG' for i in aaSeq): # only if a multifasta file is provided
+            # if my current seq doesn't fit anything, it may be RNA, not included in the provided fasta file
+            if Seq_id is None and all(i in 'ACUG' for i in aaSeq): # only if a multifasta file is provided
                 Seq_id, Seqs[Seq_id], Seq_to_filenames[Seq_id] = add_new_seqid_to_dicts(aaSeq, Seqs, Seq_to_filenames, 6)
 
             if Seq_id is None:  # only if a multifasta file is provided
@@ -221,7 +221,7 @@ def is_Steric_clash(structure, rotating_chain, distance_for_clash=1):
                 clashing_chains.add(neigh.get_parent().get_parent().id)
                 n_clashes += 1
 
-    if len(clashing_chains) > 1:
+    if len(clashing_chains) > 1 and n_clashes > 10:
         # a clash against different chains:
         val_to_return = 1
 
@@ -238,13 +238,13 @@ def is_Steric_clash(structure, rotating_chain, distance_for_clash=1):
         common_res_s2 = get_list_of_common_res(res_chain2, res_chain1)
 
         # then we obtain a list of atom objects to use it later
-        common_atoms_s1 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_s1) if x.id == 'CA'])
-        common_atoms_s2 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_s2) if x.id == 'CA'])
+        common_atoms_s1 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_s1)])
+        common_atoms_s2 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_s2)])
 
         RMSD = rmsd.kabsch_rmsd(common_atoms_s1, common_atoms_s2)
         # print("clash chain: ", clash_chain, " rotating chain: ", rotating_chain, RMSD)
 
-        if RMSD <= 2.0:
+        if RMSD <= 3.0:
             # it is the same chain
             val_to_return = 2
 
@@ -252,7 +252,7 @@ def is_Steric_clash(structure, rotating_chain, distance_for_clash=1):
             # it is another chain or the same with different structure
             val_to_return = 1
 
-    elif n_clashes > 0:
+    elif n_clashes > 10:
         # it is another chain
         val_to_return = 1
 
@@ -282,7 +282,7 @@ def get_atom_list_from_res_list(reslist):
     return atomlist
 
 
-def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, struct2):
+def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, struct2, rec_level_complex):
     # all residues from same chain (common chain) are retrieved from the 2 structures. Example: chain A
 
     res_chain1 = list(curr_struct[0][eq_chain1.id].get_residues())
@@ -317,7 +317,7 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
         my_id = moving_chain.id
         chain_names = [x.id for x in curr_struct[0].get_chains()]
         while added == 0:
-            rand = '|||' + create_random_chars_id(6)  # random ID
+            rand = '|||' + create_random_chars_id(6) + '|||' + str(rec_level_complex) # random ID + a number that indicates the recursion level at which this chain has been added
             if my_id + rand not in chain_names:
                 moving_chain.id = my_id + rand
                 curr_struct[0].add(struct2[0][moving_chain.id])
@@ -325,22 +325,6 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
 
     return curr_struct, added, clash, clashing_chains, moving_chain
 
-
-def generate_new_permutations(all_files, filename):
-
-    """ This function inputs a list of files (all_files) and a filename of interest
-    outputs a list of tuples, in which each of them has filename in a different position """
-
-    new_permutations = []
-
-    for idx in range(0, len(all_files)):
-
-        all_files.remove(filename)
-        all_files.insert(idx, filename)
-
-        new_permutations.append(tuple(all_files))
-
-    return new_permutations
 
 
 def structure_in_created_structures(structure, created_structures):
@@ -399,7 +383,7 @@ def structure_in_created_structures(structure, created_structures):
                         sup.set_atoms(common_atoms_s2, common_atoms_s1)
 
                         # if I have superimposed same ID but different structure
-                        if sup.rms > 2.0:
+                        if sup.rms > 3.0:
                             break
 
                         # apply rotation to whole common structure
@@ -424,7 +408,7 @@ def structure_in_created_structures(structure, created_structures):
                                     common_coords_p2 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_p2)])
 
                                     rms = rmsd.kabsch_rmsd(common_coords_p2, common_coords_p1)
-                                    if rms <= 2.0:
+                                    if rms <= 3.0:
                                         partners.add(possible_partner)
 
                         if len(partners) == len(list(created_structure.get_chains())):
@@ -445,14 +429,75 @@ class TwoChainException(Exception):
         return "Input file %s does not have 2 chains" % self.file
 
 
-def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaustive, this_is_a_branch=False, this_is_a_complex_recursion=False, homodimer_branch_id=('',False), non_brancheable_clashes=set(), tried_operations=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list(), stoich=None):
+def print_topology_of_complex(structure):
+
+    """This function prints to STDOUT the topology of a structure"""
+
+    print('The current complex has ' + str(len(list(structure.get_chains()))) + ' chains, with the molecules:')
+
+    # create a dictionary of the molecules
+    chains_dict = {}
+    for chain_in_comp in structure.get_chains():
+
+        id_ch = chain_in_comp.id.split('|||')[1]
+        if id_ch not in chains_dict:
+            chains_dict[id_ch] = 1
+        else:
+            chains_dict[id_ch] += 1
+
+    # print
+    for key, val in chains_dict.items():
+        print(key, ': ', str(val))
+
+def is_symetric_homodimer(structure):
+    """ asks if a structure is a homodimer"""
+
+    # debug:
+    if len(list(structure.get_chains()))!=2:
+        return False
+
+    chain1 = list(structure.get_chains())[0]
+    chain2 = list(structure.get_chains())[1]
+
+    # calculate the interacting residue IDs of chain1 to chain2:
+
+    NS = pdb.NeighborSearch(list(chain2.get_atoms()))
+
+    for at in chain1.get_atoms():
+
+        res1 = at.get_parent().id[1]
+        neighbors = NS.search(at.get_coord(), 4.0)
+
+        if len(neighbors) > 0:
+            for neigh in neighbors:
+                res2 = neigh.get_parent().id[1]
+
+                # if the two residues interacting are not the same ones it indicates that they are not symetric
+                if res1!=res2:
+                    return False
+
+    # return True if non of the  interacting residues are different
+    return True
+
+
+
+
+
+
+
+
+
+
+
+
+
+def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaustive, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list(), stoich=None, verbose=False):
 
     """This function builds a complex from a set of templates """
 
-    print(exhaustive,num_models)
-
     # return as soon as possible:
-    if not exhaustive and num_models==len(saved_models):
+    if exhaustive is False and num_models==len(saved_models):
+        print("quick return")
         return saved_models
 
     # update the rec_level:
@@ -463,9 +508,8 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
     if this_is_a_complex_recursion:  # level of the recursions opened by adding subunits
         rec_level_complex += 1
 
-    print('branch lvel: ',rec_level_branch, 'complex lvel: ',rec_level_complex)
-
-    # print('BRANCH LEVEL: ', rec_level_branch, 'COMPLEX LEVEL: ', rec_level_complex)
+    if verbose:
+        print('The current branch level is: ',rec_level_branch, 'The current complex building level: ',rec_level_complex)
 
     # a parser that is going to be used many times:
     p = pdb.PDBParser(PERMISSIVE=1)
@@ -480,8 +524,31 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
     # a boolean that indicates if there's something added at this level
     something_added = False
 
+    # print the conformation of the current complex:
+    if verbose:
+        print_topology_of_complex(current_str)
+
+
     # iterate through the chains of the current structure
     for chain1 in current_str[0].get_chains():
+
+        # when you are in deeper recursion levels check that the chains are the ones of the previous level
+        interesting_complex_rec_level = None
+
+        if this_is_a_complex_recursion:
+            # we are interested in analyzing chains that have been added JUST in the previous recursion levels
+            interesting_complex_rec_level = rec_level_complex - 1
+
+        elif this_is_a_branch:
+            # we are interested in analyzing chains of the current rec_level_complex
+            interesting_complex_rec_level = rec_level_complex
+
+        if rec_level_complex>0 and chain1.id.split('|||')[-1]!=str(interesting_complex_rec_level):
+            continue
+
+        #if verbose:
+            #print("trying to add new chains to molecule "+chain1.id.split('|||')[1]+" of the current complex")
+
 
         id_chain1 = chain1.id.split('|||')[1]
 
@@ -490,8 +557,10 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
             rotating_chain = None
             common_chain2 = None
 
+
             # if the chain id of the current structure is found in the second PDB file:
             if id_chain1 in [x.split('|||')[1] for x in PDB_dict[filename2]]:
+
                 # get the structure
                 structure2 = p.get_structure("pr2", mydir + filename2)
 
@@ -503,28 +572,34 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                     curr_id = chain.id
                     chain.id = [x for x in PDB_dict[filename2] if x[0] == curr_id][0]
 
+                    #print('chain adding: ',chain.id)
+
                 # if it is a homodimer (arbitrary set of rotating / common)
                 if PDB_dict[filename2][0].split('|||')[1] == PDB_dict[filename2][1].split('|||')[1]:
 
                     # open a branch with one type of adding
 
-                    #save structure2 for the branch:
-                    structure2_branch = copy.deepcopy(structure2)
-                    rotating_chain = structure2_branch[0][PDB_dict[filename2][0]]
-                    common_chain2 = structure2_branch[0][PDB_dict[filename2][1]]
-                    branch_new_str = copy.deepcopy(current_str)
+                    if (exhaustive or num_models>1) and is_symetric_homodimer(structure2) is False:
 
-                    #add to the complex for opening a branch:
-                    current_str, sth_added, clash, clashing_chains, added_chain = superimpose_and_rotate(chain1, common_chain2, rotating_chain, branch_new_str, structure2_branch)
+                        #save structure2 for the branch:
+                        structure2_branch = copy.deepcopy(structure2)
+                        rotating_chain = structure2_branch[0][PDB_dict[filename2][0]]
+                        common_chain2 = structure2_branch[0][PDB_dict[filename2][1]]
+                        branch_new_str = copy.deepcopy(current_str)
 
-                    if not clash and (exhaustive or num_models>1):
+                        #add to the complex for opening a branch:
+                        current_str, sth_added, clash, clashing_chains, added_chain = superimpose_and_rotate(chain1, common_chain2, rotating_chain, branch_new_str, structure2_branch, rec_level_complex)
 
-                        # add this branch to the ones already tested:
-                        tried_branch_structures.append(branch_new_str)
+                        if clash is False and structure_in_created_structures(branch_new_str, tried_branch_structures) is False:
 
-                        if not structure_in_created_structures(branch_new_str, tried_branch_structures):
-                            build_complex(saved_models, branch_new_str, mydir, PDB_dict, num_models, exhaustive, homodimer_branch_id=(filename2,True), this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes,
-                                  rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures, stoich=stoich)
+                            # add this branch to the ones already tested:
+                            tried_branch_structures.append(branch_new_str)
+
+                            if verbose:
+                                print('The file '+filename2+' contains an homodimer, opening a branch...')
+
+                            saved_models = build_complex(saved_models, branch_new_str, mydir, PDB_dict, num_models, exhaustive, this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes,
+                                  rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures, stoich=stoich, verbose=verbose)
 
                     # change the id of rotating / common and continue in this level:
                     rotating_chain = structure2[0][PDB_dict[filename2][1]]
@@ -542,7 +617,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                             rotating_chain = chain2
 
                 # try to add the new chain to the complex
-                current_str, sth_added, clash, clashing_chains, added_chain = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2)
+                current_str, sth_added, clash, clashing_chains, added_chain = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, structure2, rec_level_complex)
 
                 # when something is added, in this try
                 if sth_added == 1:
@@ -572,7 +647,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
 
                         # set the id of the chain you were trying to add:
                         added_chain = copy.deepcopy(added_chain)
-                        added_chain.id = added_chain.id + '|||' + create_random_chars_id(6)
+                        added_chain.id = added_chain.id + '|||' + create_random_chars_id(6) + '|||' + str(rec_level_complex)
 
                         # make a new branch:
                         branch_new_str = copy.deepcopy(current_str)
@@ -589,31 +664,37 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                         branch_new_str[0].add(added_chain)
 
                         # check if the branch_new_str is not in tried_branch_structures:
-                        if not structure_in_created_structures(branch_new_str, tried_branch_structures):
+                        if structure_in_created_structures(branch_new_str, tried_branch_structures) is False:
+
+                            # indicate that a branch is opening
+                            if verbose:
+                                print(added_chain.id.split('|||')[1]+' of '+filename2+' clashes against the complex. Opening a new branch...')
 
                             # add this branch to the ones already tested:
                             tried_branch_structures.append(branch_new_str)
 
                             # create a new structure based on this branch:
-                            build_complex(saved_models, branch_new_str, mydir, PDB_dict, num_models, exhaustive, this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes,
-                                          rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures, stoich=stoich)
+                            saved_models = build_complex(saved_models, branch_new_str, mydir, PDB_dict, num_models, exhaustive, this_is_a_branch=True, non_brancheable_clashes=non_brancheable_clashes,
+                                          rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures, stoich=stoich, verbose=verbose)
 
                             # return as soon as possible:
-                            if not exhaustive and num_models == len(saved_models):
+                            if exhaustive is False and num_models == len(saved_models):
+                                print("quick return")
                                 return saved_models
 
-    if something_added:
+    if something_added and rec_level_complex<=30 and len(list(current_str.get_chains()))<=30:
 
         if this_is_a_branch:
             set_this_is_a_branch = True
         else:
             set_this_is_a_branch = False
 
-        build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaustive, this_is_a_complex_recursion=True, this_is_a_branch=set_this_is_a_branch, non_brancheable_clashes=non_brancheable_clashes,
-                      rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures, stoich=stoich)
+        saved_models = build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaustive, this_is_a_complex_recursion=True, this_is_a_branch=set_this_is_a_branch, non_brancheable_clashes=non_brancheable_clashes,
+            rec_level_complex=rec_level_complex, rec_level_branch=rec_level_branch, tried_branch_structures=tried_branch_structures, stoich=stoich, verbose=verbose)
 
         # return as soon as possible:
-        if not exhaustive and num_models == len(saved_models):
+        if exhaustive is False and num_models == len(saved_models):
+            print("quick return")
             return saved_models
 
     else:
@@ -634,15 +715,24 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                 divisor = value / stoich[key]
                 divisors.add(divisor)
 
-            if len(divisors) == 1 and not structure_in_created_structures(current_str, saved_models):
+            if len(divisors) == 1 and structure_in_created_structures(current_str, saved_models) is False:
                 saved_models.append(current_str)
-                print("saved models: ", list(str(x.id) for x in current_str.get_chains()))
-                print("all saved models: ", saved_models)
 
-        elif not structure_in_created_structures(current_str, saved_models):
+                if verbose:
+                    print("saving model")
+                    print_topology_of_complex(current_str)
+                #print("saved models: ", list(str(x.id) for x in current_str.get_chains()))
+                #print("all saved models: ", saved_models)
+
+        elif structure_in_created_structures(current_str, saved_models) is False:
+
             saved_models.append(current_str)
-            print("saved models: ", list(str(x.id) for x in current_str.get_chains()))
-            print("all saved models: ", saved_models)
+            if verbose:
+                print("saving model")
+                print_topology_of_complex(current_str)
+
+            #print("saved models: ", list(str(x.id) for x in current_str.get_chains()))
+            #print("all saved models: ", saved_models)
 
     return saved_models
 

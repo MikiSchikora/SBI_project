@@ -152,7 +152,7 @@ for chain in current_structure.get_chains():
     # (A|||H2A3_B|||AGS6G), that corresponds to (chain_accession|||chain_id|||random_id)
 
 # then we call the function 'build_complex'
-final_models = func.build_complex(final_models, current_structure, Templates_dir, PDB_info, options.n_models, options.exhaustive, stoich=stoich_dict)
+final_models = func.build_complex(final_models, current_structure, Templates_dir, PDB_info, options.n_models, options.exhaustive, stoich=stoich_dict, verbose= options.verbose)
 
 
 if len(final_models) == 0:
