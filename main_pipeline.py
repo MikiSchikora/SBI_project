@@ -67,12 +67,15 @@ if options.input:
     if os.path.isfile(options.input):
 
         # when the input is a file you have to generate all the interacting pairs, rotated and translated
-        if options.input.split('.')[-1] == 'pdb' or 'ent':  # OTHER EXTENSIONS??????????
+        if options.input.split('.')[-1] == 'pdb' or 'ent':
             filetype = 'PDB'
         elif options.input.split('.')[-1] == 'cif':
             filetype = 'CIF'
         else:
             raise Exception('The provided complex has to be a PDB or mmCIF file')
+
+        if options.verbose:
+            print("Your input is a complex already. This is the program testing mode.\n Splitting input into pairwise subunits...")
 
         Templates_dir = './TEMPLATES/'
         func.Generate_pairwise_subunits_from_pdb(options.input, Templates_dir, filetype)
@@ -84,6 +87,13 @@ if options.input:
         raise Exception('You have to provide a valid input path')
 else:
     raise Exception("No input provided")
+
+if options.exhaustive:
+    sys.stderr.write("!!!!!!!!! WARNING: you specified the exhaustive option.  !!!!!!!! \n"
+          "This means that the program will undergo a tree-like recursive approach for building any possible complex with your input files, taking a long time for large structures.\n"
+          "We recommend not to use this unless you did not succeed with any other options. \n"
+          "If you suspect that different isoforms could result of your input we recommend to preset the number of isoforms expected (with the option n_models) and/or specify the desired stoichiometry (with option -sto).\n")
+
 
 
 # define the output, if it is not specified, then it is the default
@@ -99,7 +109,9 @@ if options.sequences:
 else:
     # if a multifasta is not provided
     subunits_seq_file = None
-    print("NO SUBUNITS SEQ FILE")
+    sys.stderr.write("!!!!!!!!! WARNING: you did not specify the expected molecules of the complex. !!!!!!!! \n"
+          " We recommend to provide a file with the expected molecules that are part of the complex with the -seq option.\n "
+          "This is important for you to understand which are the molecules that form each chain in the resulting complex. If not specified, each molecule gets an arbitrary identifier.\n ")
 
 if options.stoich:
     if options.sequences:
@@ -118,21 +130,22 @@ if options.stoich:
         raise Exception("You have to provide a MULTIFASTA to link ID and sequence if you want stoichiometry to be considered.")
 else:
     stoich_dict = None
+    sys.stderr.write("!!!!!!!!! WARNING: you did not specify the expected stoichiometry of the complex. !!!!!!!! \n"
+          " We recommend to provide a file with the expected stoichiometry with the -sto option. This is important for filtering out non-expected complexes. Use this option only if you have prior evidence about the stoichiometry and you expect many possible stoichiometries.\n")
 
 number_subunits_file = './subunits_num.tbl'  # a file containing the number of subunits, if known
 
 
 # generate info about the Templates
+if options.verbose:
+    print("Generating information about your input files ... ")
+
 # PDB_info information about the unique chains: Keys: filename, Values: {Chain: unique ID}
 # Uniq_seqs is a set with all the unique IDs
 PDB_info, Seq_to_filenames = func.Generate_PDB_info(Templates_dir, subunits_seq_file)
 
-print(PDB_info)
 # initialise PDB files parser
 p = pdb.PDBParser(PERMISSIVE=1)
-
-final_models = []
-
 
 # initial filename:
 filename = os.listdir(Templates_dir)[0]
@@ -151,15 +164,22 @@ for chain in current_structure.get_chains():
 # NOTE: all the chains, but the initial 2, in the current_structure will have this naming for a proper working of the code:
     # (A|||H2A3_B|||AGS6G), that corresponds to (chain_accession|||chain_id|||random_id)
 
+if options.verbose:
+    print(" BUILDING THE COMPLEX...")
+
+# initialize vars
+final_models = []
+
 # then we call the function 'build_complex'
 final_models = func.build_complex(final_models, current_structure, Templates_dir, PDB_info, options.n_models, options.exhaustive, stoich=stoich_dict, verbose= options.verbose)
 
 
 if len(final_models) == 0:
     if options.stoich:
-        sys.stderr.write("No complex could be obtained with your specified stoichiometry\n")
+        sys.stderr.write("No complex could be obtained with your specified stoichiometry, we reccomend specifying a number of \n")
     else:
         sys.stderr.write("No complex could be obtained\n")
+
 
 
 for final_model in final_models:

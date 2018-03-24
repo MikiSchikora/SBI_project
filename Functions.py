@@ -510,6 +510,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
 
     if verbose:
         print('The current branch level is: ',rec_level_branch, 'The current complex building level: ',rec_level_complex)
+        print('The number of complexes already created is %i and you want to generate %i'%(len(saved_models),num_models))
 
     # a parser that is going to be used many times:
     p = pdb.PDBParser(PERMISSIVE=1)
@@ -546,9 +547,6 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
         if rec_level_complex>0 and chain1.id.split('|||')[-1]!=str(interesting_complex_rec_level):
             continue
 
-        #if verbose:
-            #print("trying to add new chains to molecule "+chain1.id.split('|||')[1]+" of the current complex")
-
 
         id_chain1 = chain1.id.split('|||')[1]
 
@@ -577,9 +575,9 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                 # if it is a homodimer (arbitrary set of rotating / common)
                 if PDB_dict[filename2][0].split('|||')[1] == PDB_dict[filename2][1].split('|||')[1]:
 
-                    # open a branch with one type of adding
+                    # try to open a branch if any of the branch-opening conditions is correct
 
-                    if (exhaustive or num_models>1) and is_symetric_homodimer(structure2) is False:
+                    if exhaustive or num_models>1 or stoich:
 
                         #save structure2 for the branch:
                         structure2_branch = copy.deepcopy(structure2)
@@ -588,7 +586,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                         branch_new_str = copy.deepcopy(current_str)
 
                         #add to the complex for opening a branch:
-                        current_str, sth_added, clash, clashing_chains, added_chain = superimpose_and_rotate(chain1, common_chain2, rotating_chain, branch_new_str, structure2_branch, rec_level_complex)
+                        branch_new_str, sth_added, clash, clashing_chains, added_chain = superimpose_and_rotate(chain1, common_chain2, rotating_chain, branch_new_str, structure2_branch, rec_level_complex)
 
                         if clash is False and structure_in_created_structures(branch_new_str, tried_branch_structures) is False:
 
@@ -624,8 +622,8 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                     # record if there has been any chain added:
                     something_added = True
 
-                # when there's a aberrant clash
-                if clash == 1 and (exhaustive or num_models>1):
+                # when there's a aberrant clash and you fulfill one of the branch-opening  conditions
+                if clash == 1 and (exhaustive or num_models>1 or stoich):
 
                     # a branch complex will be created if the rotating chain is not one of the previously branch-opening clashing chains
                     # or if the clashes happen against the chain that opened this branch
@@ -698,8 +696,10 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
             return saved_models
 
     else:
-        print("trying to save model")
+        if verbose:
+            print("trying to save model")
 
+        # check stoichiomatry
         if stoich:
             final_stoich = {}
             for chain in current_str.get_chains():
@@ -721,8 +721,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                 if verbose:
                     print("saving model")
                     print_topology_of_complex(current_str)
-                #print("saved models: ", list(str(x.id) for x in current_str.get_chains()))
-                #print("all saved models: ", saved_models)
+                    print('\n\n')
 
         elif structure_in_created_structures(current_str, saved_models) is False:
 
@@ -730,9 +729,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
             if verbose:
                 print("saving model")
                 print_topology_of_complex(current_str)
-
-            #print("saved models: ", list(str(x.id) for x in current_str.get_chains()))
-            #print("all saved models: ", saved_models)
+                print('\n\n')
 
     return saved_models
 
