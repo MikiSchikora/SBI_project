@@ -326,7 +326,6 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, stru
     return curr_struct, added, clash, clashing_chains, moving_chain
 
 
-
 def structure_in_created_structures(structure, created_structures):
 
     """ This function asks if the structure (with many chains) is already in  created_structures (a list of structures). returning a boolean if so"""
@@ -478,17 +477,6 @@ def is_symetric_homodimer(structure):
 
     # return True if non of the  interacting residues are different
     return True
-
-
-
-
-
-
-
-
-
-
-
 
 
 def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaustive, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list(), stoich=None, verbose=False):
