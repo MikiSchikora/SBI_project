@@ -6,6 +6,8 @@ sys.path.append(os.curdir)
 import Functions as func
 import Bio.PDB as pdb
 import argparse
+import random
+import copy
 
 
 parser = argparse.ArgumentParser(description="This program builds a complex from the interacting pairwise subunits")  # WRITE DESCRIPTION!!!!!
@@ -56,7 +58,15 @@ parser.add_argument('-n_models', '--number-of-models',
    type=int,
    action="store",
    default=1,
-   help="This pipeline can generate several models oot of one input. With this you can indicate the number of models (an integrer) that have to be generated")
+   help="This pipeline can generate several models out of one input. With this you can indicate the number of models (an integrer) that have to be generated")
+
+parser.add_argument('-n_chains', '--number-of-chains',
+   dest="n_chains",
+   type=int,
+   action="store",
+   default=1000,
+   help="Specify the maximum number of chains that a model should have")
+
 
 options = parser.parse_args()
 
@@ -67,7 +77,7 @@ if options.input:
     if os.path.isfile(options.input):
 
         # when the input is a file you have to generate all the interacting pairs, rotated and translated
-        if options.input.split('.')[-1] == 'pdb' or 'ent':
+        if options.input.split('.')[-1] == 'pdb' or  options.input.split('.')[-1] == 'ent':
             filetype = 'PDB'
         elif options.input.split('.')[-1] == 'cif':
             filetype = 'CIF'
@@ -78,7 +88,7 @@ if options.input:
             print("Your input is a complex already. This is the program testing mode.\n Splitting input into pairwise subunits...")
 
         Templates_dir = './TEMPLATES/'
-        func.Generate_pairwise_subunits_from_pdb(options.input, Templates_dir, filetype)
+        func.Generate_pairwise_subunits_from_pdb(options.input, Templates_dir, filetype, options.verbose)
 
     elif os.path.isdir(options.input):
         Templates_dir = options.input
@@ -140,15 +150,17 @@ number_subunits_file = './subunits_num.tbl'  # a file containing the number of s
 if options.verbose:
     print("Generating information about your input files ... ")
 
-# PDB_info information about the unique chains: Keys: filename, Values: {Chain: unique ID}
-# Uniq_seqs is a set with all the unique IDs
-PDB_info, Seq_to_filenames = func.Generate_PDB_info(Templates_dir, subunits_seq_file)
+# PDB_info information about the unique chains: Keys: filename, Values: [(chain accession , molecule identifier) ... ]
+# Seqs_info has the sequence id and sequence
+
+PDB_info, Seqs_info = func.Generate_PDB_info(Templates_dir, subunits_seq_file,options.verbose)
+
 
 # initialise PDB files parser
 p = pdb.PDBParser(PERMISSIVE=1)
 
-# initial filename:
-filename = os.listdir(Templates_dir)[0]
+# Pick initial filename randomly:
+filename = random.choice(list(PDB_info.keys()))
 
 # we start with the structure of the first pairwise interaction, this is now the current model
 current_structure = p.get_structure("pr1", Templates_dir + filename)
@@ -156,13 +168,14 @@ current_structure = p.get_structure("pr1", Templates_dir + filename)
 if len(list(current_structure.get_chains())) != 2:
     raise func.TwoChainException(filename)
 
+
 # change the chain id names
 for chain in current_structure.get_chains():
-    curr_id = chain.id
+    curr_id = chain.id # the so-called chain accession, usually a letter (A,B,C,D ...)
     chain.id = [x for x in PDB_info[filename] if x[0] == curr_id][0]
 
 # NOTE: all the chains, but the initial 2, in the current_structure will have this naming for a proper working of the code:
-    # (A|||H2A3_B|||AGS6G), that corresponds to (chain_accession|||chain_id|||random_id)
+    # (A,H2A3_B,AGS6G,3), that corresponds to (chain_accession, chain_id, random_id, recursivity level at which it has been added)
 
 if options.verbose:
     print(" BUILDING THE COMPLEX...")
@@ -171,39 +184,97 @@ if options.verbose:
 final_models = []
 
 # then we call the function 'build_complex'
-final_models = func.build_complex(final_models, current_structure, Templates_dir, PDB_info, options.n_models, options.exhaustive, stoich=stoich_dict, verbose= options.verbose)
+final_models = func.build_complex(final_models, current_structure, Templates_dir, PDB_info, options.n_models, options.exhaustive, options.n_chains, stoich=stoich_dict, verbose= options.verbose)
 
 
 if len(final_models) == 0:
     if options.stoich:
-        sys.stderr.write("No complex could be obtained with your specified stoichiometry, we reccomend specifying a number of \n")
+        sys.stderr.write("No complex could be obtained with your specified stoichiometry. We recommend specifying a number of models to explore (-n_models) or run the default pipeline (as sometimes the obtained stoichiometry is very similar to the expected). \n")
     else:
-        sys.stderr.write("No complex could be obtained\n")
+        sys.stderr.write("No complex could be obtained with the provided files. \n")
 
-
-
+# printing the model
 for final_model in final_models:
-    # we go through all the chains of the structure and rename them alphabetically
-    final_model.id = '_'.join([str(x.id) for x in final_model.get_chains()])
 
-    print(final_model.id)
+    # if final model has more than 62 chains, split into different models
+    structure = func.pdb_struct.Structure('id') # empty structure:
 
-    final_chains = list(final_model.get_chains())  # list of chain objects
-    chain_alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
-                      "T", "U", "V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
-                      "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
-    alphabet_pos = 0
-    for final_chain in final_chains:
-        final_chain.id = chain_alphabet[alphabet_pos]
-        alphabet_pos += 1
+    # create a new model for each group of 62 chains, and add to structure and change the id of the chains and record the info about which is the molecule of each chain
+    chain_counter = 0
+    model_counter = 0
+    legend = ""
 
-    # then we can finally save the obtained structure object into a pdb file
+    # change the ids of the chains to completely random, for further
+    chains = list(final_model.get_chains())
+
+    for chain in chains:
+
+        # define the new id:
+        new_id = func.chain_alphabet[chain_counter]
+
+        # update what has to be printed:
+        legend += 'CHAIN    %s   %s   %s\n' % (new_id, chain.id[1], Seqs_info[chain.id[1]])
+
+        # change to the new id
+        chain.id = new_id
+
+        # improve the chain counter
+        chain_counter += 1
+
+        if options.verbose:
+            print('printing chain: ',chain_counter ,chain.id)
+
+        # initialize model
+        if chain_counter==1:
+            model_counter += 1
+            model = func.pdb_model.Model(model_counter)
+
+
+        # add chain to the model
+        model.add(chain)
+
+
+        # reset counter and add model after 62 rounds
+        if chain_counter==len(func.chain_alphabet):
+            chain_counter = 0
+
+            model = copy.deepcopy(model)
+            structure.add(model)
+
+            # remove the chains in the current model of  of the final_model, to avoid further problems with the id
+            for chain_m in model.get_chains():
+                final_model[0].detach_child(chain_m.id)
+
+
+    # add the last model:
+    current_models_strcuture = [x.id for x in structure.get_models()]
+    if model.id not in current_models_strcuture:
+        structure.add(model)
+
+    # define the name of the model, not to overwrite previous existing files
     written_id = 0
     PDB_name = 'model_' + str(written_id) + '.pdb'
     while PDB_name in os.listdir(output):
         written_id += 1
         PDB_name = 'model_'+str(written_id)+'.pdb'
 
-    io = pdb.PDBIO()
-    io.set_structure(final_model)
-    io.save(output+PDB_name)
+    if options.verbose:
+        print('%s created as a model for the complex structure.'%(PDB_name))
+
+    # open the pdb and put information about what is each chain
+    model_path = output + PDB_name
+
+
+    # WRITE the ATOM lines:
+    io = pdb.PDBIO() # using our own PDB writer
+    io.set_structure(structure)
+    io.save(model_path)
+
+    # write the info lines
+    fd = open(model_path,'a')
+    fd.write('CHAIN HEADER    current id   molecule id    sequence\n')
+    fd.write(legend)
+    fd.write('\n')
+    fd.close()
+
+
