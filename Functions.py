@@ -20,13 +20,11 @@ chain_alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M
             , "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4"
             , "5", "6", "7", "8", "9"]
 
-#chain_alphabet = ["A", "B", "C", "D"]
-
-
 repeat2 = [''.join(p) for p in itertools.product(chain_alphabet, repeat=2)]
 repeat3 = [''.join(p) for p in itertools.product(chain_alphabet, repeat=3)]
 
 complete_chain_alphabet = chain_alphabet + repeat2 + repeat3
+
 
 def generate_pairwise_subunits_from_pdb(pdb_file_path, templates_path, file_type, verbose):
 
@@ -54,7 +52,7 @@ def generate_pairwise_subunits_from_pdb(pdb_file_path, templates_path, file_type
     id_nch = 0
     for chain in structure.get_chains():
         actual_id = chain.id
-        chain.id = (complete_chain_alphabet[id_nch]+'_',actual_id)
+        chain.id = (complete_chain_alphabet[id_nch]+'_', actual_id)
         id_nch += 1
 
     # free the ./templates_path/
@@ -137,7 +135,7 @@ def generate_pairwise_subunits_from_pdb(pdb_file_path, templates_path, file_type
 
                     # write to new pdb:
 
-                    if structure_in_created_structures(new_structure,saved_structures) is False:
+                    if structure_in_created_structures(new_structure, saved_structures) is False:
 
                         # record as a saved structure:
                         saved_structures.append(new_structure)
@@ -149,7 +147,7 @@ def generate_pairwise_subunits_from_pdb(pdb_file_path, templates_path, file_type
                             id_nch += 1
 
                         if verbose:
-                            print('writing PDB file with the interaction of %s and %s into %s.pdb'%(chain1.id[1],chain2.id[1],ID))
+                            print('writing PDB file with the interaction of %s and %s into %s.pdb' % (chain1.id[1], chain2.id[1], ID))
 
                         # write using our customized writer
                         io = pdb.PDBIO()
@@ -211,7 +209,7 @@ def generate_PDB_info(templates_dir, subunits_seq_file, verbose, min_identity_be
     for file in List_PDBs:
 
         if verbose:
-            print("Processing the content of file %s"%(file))
+            print("Processing the content of file %s" % file)
 
         # generate the structure of this file:
         path = templates_dir + file
@@ -228,14 +226,14 @@ def generate_PDB_info(templates_dir, subunits_seq_file, verbose, min_identity_be
             if molSeq == '':
 
                 # it may be nucleic acids
-                molSeq = ''.join([x.resname[2] for x in chain.get_residues() if x.resname[2] in 'ACGTU' and len(x.resname)==3])
+                molSeq = ''.join([x.resname[2] for x in chain.get_residues() if x.resname[2] in 'ACGTU' and len(x.resname) == 3])
 
-                if not len(molSeq)>0:
+                if not len(molSeq) > 0:
                     break
 
             # assign an ID (id of the fasta or a new for the molecule) to the sequence:
-            Seq_id = None
-            Best_identity = min_identity_between_chains
+            seq_id = None
+            best_identity = min_identity_between_chains
 
             # compare the current chain sequence with the ones present in Seqs
             if Seqs:
@@ -246,24 +244,24 @@ def generate_PDB_info(templates_dir, subunits_seq_file, verbose, min_identity_be
                     percent_match = (alignment[0][2] / min(len(molSeq), len(Seqs[my_id]))) * 100
 
                     # if percentage identity is lar
-                    if percent_match > Best_identity:
-                        Seq_id = my_id
-                        Best_identity = percent_match
+                    if percent_match > best_identity:
+                        seq_id = my_id
+                        best_identity = percent_match
 
                 # my current sequence didn't match anything in Seqs, so it is added to the dictionary
-                if Seq_id is None and subunits_seq_file is None:
-                    Seq_id, Seqs[Seq_id] = create_id_and_add_string_to_dict(molSeq, Seqs, 6)
+                if seq_id is None and subunits_seq_file is None:
+                    seq_id, Seqs[seq_id] = create_id_and_add_string_to_dict(molSeq, Seqs, 6)
 
             # add the current chain sequence to Seqs if it is empty
             else:
-                Seq_id, Seqs[Seq_id] = create_id_and_add_string_to_dict(molSeq, Seqs, 6)
+                seq_id, Seqs[seq_id] = create_id_and_add_string_to_dict(molSeq, Seqs, 6)
 
-            if Seq_id is None:  # only if a multifasta file is provided and this chain is not there
-                print("WARNING: %s contains non expected sequences!! It will not be used for building the model."%(file))
+            if seq_id is None:  # only if a multifasta file is provided and this chain is not there
+                print("WARNING: %s contains non expected sequences!! It will not be used for building the model." % file)
                 break
 
             else:
-                ID_new = (chain.id,Seq_id)
+                ID_new = (chain.id, seq_id)
                 Chain_IDs.append(ID_new)
 
         # save info into dictionary PDB_info
@@ -288,8 +286,8 @@ def is_steric_clash(structure, rotating_chain, distance_for_clash=1.4):
     # initialize the neighbor search
     NS = pdb.NeighborSearch(list(structure.get_atoms()))
 
-    clashing_chains = set() # the set of clashing chains (in structure)
-    n_clashes = 0 # the number of clashes
+    clashing_chains = set()  # the set of clashing chains (in structure)
+    n_clashes = 0  # the number of clashes
 
     for at in rotating_chain.get_atoms():
         neighbors = NS.search(at.get_coord(), distance_for_clash)
@@ -370,7 +368,7 @@ def get_atom_list_from_res_list(reslist):
     return atomlist
 
 
-def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, rec_level_complex, filename2=None):
+def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, rec_level_complex):
 
     """Superimpose 2 chains and add another with the rotation parameters obtained. Return structure object with added chain, information about clashes and a flag for having added something.
 
@@ -396,7 +394,7 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, rec_
     common_atoms_s2 = get_atom_list_from_res_list(common_res_s2)
 
     # debug
-    if len(common_atoms_s1)!=len(common_atoms_s2):
+    if len(common_atoms_s1) != len(common_atoms_s2):
         return curr_struct, 0, False, set(), moving_chain
 
     # use the Superimposer
@@ -542,7 +540,7 @@ def print_topology_of_complex(structure):
 
     """Print the topology of a structure to STDOUT"""
 
-    print('The current complex has %i chains, with the molecules:'%(len(list(structure.get_chains()))))
+    print('The current complex has %i chains, with the molecules:' % (len(list(structure.get_chains()))))
 
     # create a dictionary of the molecules
     chains_dict = {}
@@ -588,19 +586,19 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
 
     # update the rec_level:
 
-    if this_is_a_branch: # level of the recursions opened by the clash of a chain against another
+    if this_is_a_branch:  # level of the recursions opened by the clash of a chain against another
         rec_level_branch += 1
 
     if this_is_a_complex_recursion:  # level of the recursions opened by adding subunits
         rec_level_complex += 1
 
     if verbose:
-        print('The current branch level is: ',rec_level_branch, 'The current complex building level: ',rec_level_complex)
+        print('The current branch level is: ', rec_level_branch, 'The current complex building level: ', rec_level_complex)
 
         if exhaustive:
-            print('The number of complexes already created is %i and you want to generate all possible complexes'%(len(saved_models)))
+            print('The number of complexes already created is %i and you want to generate all possible complexes' % (len(saved_models)))
         else:
-            print('The number of complexes already created is %i and you want to generate %i'%(len(saved_models),num_models))
+            print('The number of complexes already created is %i and you want to generate %i' % (len(saved_models), num_models))
 
     # a parser that is going to be used many times:
     p = pdb.PDBParser(PERMISSIVE=1)
@@ -636,7 +634,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
             interesting_complex_rec_level = rec_level_complex
 
         # remember that chain1.id will be atuple of ONLY two elements if rec_level_complex=0
-        if rec_level_complex>0 and chain1.id[-1]!=str(interesting_complex_rec_level):
+        if rec_level_complex > 0 and chain1.id[-1] != str(interesting_complex_rec_level):
             continue
 
         if verbose:
@@ -651,7 +649,6 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
             rotating_chain = None
             common_chain2 = None
 
-
             # if the chain id of the current structure is found in the second PDB file:
             if id_chain1 in [x[1] for x in PDB_dict[filename2]]:
 
@@ -663,18 +660,16 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
 
                 # change the chain id names
                 for chain in structure2.get_chains():
-                    curr_id = chain.id # the so-called chain accession, usually a letter (A,B,C,D ...)
+                    curr_id = chain.id  # the so-called chain accession, usually a letter (A,B,C,D ...)
                     chain.id = [x for x in PDB_dict[filename2] if x[0] == curr_id][0]
-
 
                 # if it is a homodimer set both pssibilities of rotating / common
                 if PDB_dict[filename2][0][1] == PDB_dict[filename2][1][1]:
 
                     # generate an array with the two possibilities
 
-                    rotating_chains = [structure2[0][PDB_dict[filename2][0]],structure2[0][PDB_dict[filename2][1]]]
-                    common_chains2 = [structure2[0][PDB_dict[filename2][1]],structure2[0][PDB_dict[filename2][0]]]
-
+                    rotating_chains = [structure2[0][PDB_dict[filename2][0]], structure2[0][PDB_dict[filename2][1]]]
+                    common_chains2 = [structure2[0][PDB_dict[filename2][1]], structure2[0][PDB_dict[filename2][0]]]
 
                 else:
                     # decide which is (rotating / common)
@@ -690,12 +685,12 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                     rotating_chains = [rotating_chain]
                     common_chains2 = [common_chain2]
 
-                #go through each possible rotating and common chains
+                # go through each possible rotating and common chains
 
-                for I in range(0,len(rotating_chains)):
+                for I in range(0, len(rotating_chains)):
 
                     # define each of the rotating/common, without perturbing the original ones
-                    if len(rotating_chains)>1:
+                    if len(rotating_chains) > 1:
                         rotating_chain = copy.deepcopy(rotating_chains[I])
                         common_chain2 = copy.deepcopy(common_chains2[I])
                     else:
@@ -703,7 +698,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                         common_chain2 = common_chains2[I]
 
                     # try to add the new chain to the complex
-                    current_str, sth_added, clash, clashing_chains, added_chain = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, rec_level_complex, filename2=filename2)
+                    current_str, sth_added, clash, clashing_chains, added_chain = superimpose_and_rotate(chain1, common_chain2, rotating_chain, current_str, rec_level_complex)
 
                     # when something is added, in this try
                     if sth_added == 1:
@@ -711,7 +706,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                         something_added = True
 
                     # when there's a aberrant clash and you fulfill one of the branch-opening  conditions
-                    if clash == 1 and (exhaustive or num_models>1 or stoich):
+                    if clash == 1 and (exhaustive or num_models > 1 or stoich):
 
                         # a branch complex will be created if the rotating chain is not one of the previously branch-opening clashing chains
                         # or if the clashes happen against the chain that opened this branch
@@ -754,7 +749,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
 
                                 # indicate that a branch is opening
                                 if verbose:
-                                    print('%s of %s  clashes against the complex. Opening a new branch...' %(added_chain.id[1],filename2))
+                                    print('%s of %s  clashes against the complex. Opening a new branch...' % (added_chain.id[1], filename2))
 
                                 # add this branch to the ones already tested:
                                 tried_branch_structures.append(branch_new_str)
@@ -767,7 +762,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                                 if exhaustive is False and num_models == len(saved_models):
                                     return saved_models
 
-    if something_added and len(list(current_str.get_chains()))<=n_chains:
+    if something_added and len(list(current_str.get_chains())) <= n_chains:
 
         if this_is_a_branch:
             set_this_is_a_branch = True
@@ -785,7 +780,7 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
         if verbose:
             print("trying to save model")
 
-        # check stoichiomatry
+        # check stoichiometry
         if stoich:
             final_stoich = {}
             for chain in current_str.get_chains():
@@ -818,5 +813,4 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                 print('\n')
 
     return saved_models
-
 
