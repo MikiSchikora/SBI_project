@@ -115,9 +115,9 @@ if options.sequences:
 else:
     # if a multifasta is not provided
     subunits_seq_file = None
-    sys.stderr.write("!!!!!!!!! WARNING: you did not specify the expected molecules of the complex. !!!!!!!! \n"
-          "We recommend to provide a file with the expected molecules that are part of the complex with the -seq option.\n "
-          "This is important in order to know which are the molecules belonging to each chain in the resulting complex. \n If not specified, each molecule gets an arbitrary identifier.\n ")
+    sys.stderr.write("!!!!!!!!! WARNING: you did not specify the sequence of the molecules of the complex. !!!!!!!! \n"
+          "We recommend to provide a file with the expected molecules that are part of the complex with the -seq option.\n"
+          "This is important in order to know which are the molecules belonging to each chain in the resulting complex. \nIf not specified, each molecule gets an arbitrary identifier.\n")
 
 
 # handle stoichiometry tabular input
@@ -140,7 +140,7 @@ if options.stoich:
 else:
     stoich_dict = None
     sys.stderr.write("!!!!!!!!! WARNING: you did not specify the expected stoichiometry of the complex. !!!!!!!! \n"
-          " We recommend to provide a file with the expected stoichiometry with the -sto option. This is important for filtering out non-expected complexes. \n Use this option only if you have prior evidence about the stoichiometry and you expect many possible stoichiometries.\n")
+          "We recommend to provide a file with the expected stoichiometry with the -sto option in order to filter out non-expected complexes. \nUse this option only if you have prior evidence about the stoichiometry and you expect many possible stoichiometries.\n")
 
 
 # generate info about the templates
@@ -176,7 +176,7 @@ for chain in current_structure.get_chains():
     # (A,H2A3_B,AGS6G,3), that corresponds to (chain_accession, chain_id, random_id, recursivity level at which it has been added)
 
 if options.verbose:
-    print(" BUILDING THE COMPLEX...")
+    print("BUILDING THE COMPLEX...")
 
 # initialize vars
 final_models = []
