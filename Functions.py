@@ -28,21 +28,18 @@ repeat3 = [''.join(p) for p in itertools.product(chain_alphabet, repeat=3)]
 
 complete_chain_alphabet = chain_alphabet + repeat2 + repeat3
 
-def Generate_pairwise_subunits_from_pdb(pdb_file_path, TEMPLATES_path, file_type, verbose):
+def generate_pairwise_subunits_from_pdb(pdb_file_path, templates_path, file_type, verbose):
 
+    """Take an existing complex and fragment it into each of the pairwise interactions between subunits.
 
+    Keyword arguments:
+    pdb_file_path -- path where the complex PDB is
+    templates_path -- folder where the resulting folders will be saved
+    file_type -- type of file
+    verbose -- if a log of the program execution is saved
 
-    """This function takes an existing complex and fragments it into each of the pairwise interactions between subunits.
-
-    pdb_file_path is the path where the complex PDB is
-
-    TEMPLATES_path is the folder where the resulting folders have to be saved
-
-    file_type indicates which is the type of file
-
-    verbose indicates if a log of the program execution has to be saved
-
-    It does not consider nucleic acid sequences, as this is only for testing the program on different complexes"""
+    Considerations:
+    Does not consider nucleic acid sequences, it is only for testing the program on different complexes"""
 
     num_file = 0
 
@@ -60,8 +57,8 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path, TEMPLATES_path, file_type
         chain.id = (complete_chain_alphabet[id_nch]+'_',actual_id)
         id_nch += 1
 
-    # free the ./TEMPLATES_path/
-    os.system('rm -rf ' + TEMPLATES_path + '*')
+    # free the ./templates_path/
+    os.system('rm -rf ' + templates_path + '*')
 
     # initialize the saved pairs and structures
     saved_pairs = set()
@@ -157,41 +154,49 @@ def Generate_pairwise_subunits_from_pdb(pdb_file_path, TEMPLATES_path, file_type
                         # write using our customized writer
                         io = pdb.PDBIO()
                         io.set_structure(new_structure)
-                        io.save(TEMPLATES_path + ID + '.pdb')
+                        io.save(templates_path + ID + '.pdb')
 
 
 def create_random_chars_id(n):
 
-    """Creates an identifier with n random characters."""
+    """Create and return an identifier with n ASCII uppercase random characters."""
 
     rand_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(n))
     return rand_id
 
 
-def add_new_seqid_to_dicts(seq, dict, n):
+def create_id_and_add_string_to_dict(string, dict, n):
 
-    """Adds a random identifier of n characters to 2 dictionaries, the first having a sequence, the other initialising and empty set"""
+    """Add an identifier of n random characters as a key of dictionary and a string as value and return them."""
 
-    seq_id = create_random_chars_id(n)  # create random ID
-    while seq_id in dict:
-        seq_id = create_random_chars_id(n)  # random ID is already in Seqs dict
-    dict[seq_id] = seq
+    # create random ID
+    str_id = create_random_chars_id(n)
 
-    return seq_id, dict[seq_id]
+    # while the random ID is already in the dict
+    while str_id in dict:
+        # create a new random ID
+        str_id = create_random_chars_id(n)
+
+    # define ID as key, string as value
+    dict[str_id] = string
+
+    return str_id, dict[str_id]
 
 
-def Generate_PDB_info(Templates_dir, subunits_seq_file, verbose, min_identity_between_chains=95):
+def generate_PDB_info(templates_dir, subunits_seq_file, verbose, min_identity_between_chains=95):
 
-    """This function takes the Templates_dir and creates a dictionary with information about each template
-    Each template gets incorporated into a dictionary with a unique identifiers for it's chains, in a way that you save all files that are useful
+    """Take a directory of templates, create and return a dictionary with information about each template file.
 
-    min_identity_between_chains refers to the minimum identity required between two molecules to state that they are the same
+    Keyword arguments:
+    templates_dir -- directory with PDB pairwise interactions files
+    subunits_seq_file -- FASTA file containing the sequences of all the molecules that form the complex
+    min_identity_between_chains -- minimum identity required between 2 molecules to be classified as the same. Default = 95%
 
-    subunits_seq_file is a fasta file containing all the molecules that form the complex """
+    Incorporate each template file into a key in a dictionary with list with 2 unique identifiers for its chains as value"""
 
     # each chain in the template will have a unique identifier, composed by a tuple of (chain accession , molecule identifier). Accession is the provided chain id, and molecule identifier indicates which is the molecule of that chain
 
-    List_PDBs = os.listdir(Templates_dir)
+    List_PDBs = os.listdir(templates_dir)
     PDB_info = {}  # This will contain information about the unique chains: Keys: filename, Values: [(chain accession , molecule identifier) ... ]
 
     ppb = pdb.Polypeptide.PPBuilder()  # polypeptide parser
@@ -208,9 +213,8 @@ def Generate_PDB_info(Templates_dir, subunits_seq_file, verbose, min_identity_be
         if verbose:
             print("Processing the content of file %s"%(file))
 
-
         # generate the structure of this file:
-        path = Templates_dir + file
+        path = templates_dir + file
         PDB_structure = parser.get_structure('structure', path)
         chains = list(PDB_structure.get_chains())
         Chain_IDs = []  # wll contain the unique ID for each chain
@@ -248,11 +252,11 @@ def Generate_PDB_info(Templates_dir, subunits_seq_file, verbose, min_identity_be
 
                 # my current sequence didn't match anything in Seqs, so it is added to the dictionary
                 if Seq_id is None and subunits_seq_file is None:
-                    Seq_id, Seqs[Seq_id] = add_new_seqid_to_dicts(molSeq, Seqs, 6)
+                    Seq_id, Seqs[Seq_id] = create_id_and_add_string_to_dict(molSeq, Seqs, 6)
 
             # add the current chain sequence to Seqs if it is empty
             else:
-                Seq_id, Seqs[Seq_id] = add_new_seqid_to_dicts(molSeq, Seqs, 6)
+                Seq_id, Seqs[Seq_id] = create_id_and_add_string_to_dict(molSeq, Seqs, 6)
 
             if Seq_id is None:  # only if a multifasta file is provided and this chain is not there
                 print("WARNING: %s contains non expected sequences!! It will not be used for building the model."%(file))
@@ -269,17 +273,17 @@ def Generate_PDB_info(Templates_dir, subunits_seq_file, verbose, min_identity_be
     return PDB_info, Seqs
 
 
-def is_Steric_clash(structure, rotating_chain, distance_for_clash=1.4):
+def is_steric_clash(structure, rotating_chain, distance_for_clash=1.4):
 
-    """This function returns False if there's no clash between a rotating chain and the current structure.
-    If there's a clash it can return 1 (clash between two different chains) or 2 (you are trying to superimpose something in the place it was already)
+    """Check if there is a steric clash between a rotating chain and current structure. Return False (no clash), 1 (clash between two different chains) or 2 (same chain). Also returns the ids of the chains in structure that are clashing
 
-    it also returns the ids of the chains in structure that are clashing
+    Keyword arguments:
+    structure -- whole structure
+    rotating_chain -- chain to be analyzed with respect to structure
+    distance_for_clash -- threshold to consider clash between atoms. Default = 1.4 (Armstrongs)
 
-    The clash criteria is that at least one 10 the atoms are at a lower distance than distance_for_clash Amstrongs.
-    The logic behind is that few atoms clashing indicate that the resulting structure could be viable after optimization with the rosetta software.
-
-    It is considered that two chains are in the same place if the RMSD between them is lower or equal to 3.0. """
+    Clash criteria: at least 10 of the atoms are at a lower distance than distance_for_clash
+    Same chain criteria: RMSD between them <= 3.0 """
 
     # initialize the neighbor search
     NS = pdb.NeighborSearch(list(structure.get_atoms()))
@@ -342,7 +346,7 @@ def is_Steric_clash(structure, rotating_chain, distance_for_clash=1.4):
 
 def get_list_of_common_res(reslist1, reslist2):
 
-    """Takes 2 lists of residues and returns a list of common residues (equal number)"""
+    """Take 2 lists of residues and return a list of common residues (equal number)"""
 
     # define the set of ids of the valid residues in reslist2, they have to include 'CA' and 'P' in both
     ids_res_2 = set([x.id[1] for x in reslist2 if ('CA' in x or 'P' in x)])
@@ -354,7 +358,7 @@ def get_list_of_common_res(reslist1, reslist2):
 
 def get_atom_list_from_res_list(reslist):
 
-    """Get a list of atom objects from a list of residue objects"""
+    """Return a list of CA or P atom objects from a list of residue objects"""
 
     atomlist = []
     for res in reslist:
@@ -368,19 +372,14 @@ def get_atom_list_from_res_list(reslist):
 
 def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, rec_level_complex, filename2=None):
 
-    """This function inputs several objects for performing the adding of chains to the current complex.
+    """Superimpose 2 chains and add another with the rotation parameters obtained. Return structure object with added chain, information about clashes and a flag for having added something.
 
-    eq_chain1 is the common chain in the current structure (curr_struct)
-
-    eq_chain2 is the common chain in the structure from which you want to add a chain
-
-    moving_chain is the chain that may be added to the current complex
-
-    rec_level_complex is the recursion level of building the complex
-
-    filename2 is the name of the file that contained the moving_chain
-
-    It returns the current structure, information about the clashes and a flag for having added something"""
+    Keyword arguments:
+    eq_chain1 -- common chain in the current structure (curr_struct)
+    eq_chain2 -- common chain in the structure from which a chain wants to be added (moving_chain)
+    moving_chain -- chain that may be added to the current complex
+    rec_level_complex -- recursion level of building the complex
+    filename2 -- name of the file that contains the moving_chain """
 
     # all residues from same chain (common chain) are retrieved from the 2 structures. Example: chain A
 
@@ -396,11 +395,9 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, rec_
     common_atoms_s1 = get_atom_list_from_res_list(common_res_s1)
     common_atoms_s2 = get_atom_list_from_res_list(common_res_s2)
 
-
     # debug
     if len(common_atoms_s1)!=len(common_atoms_s2):
         return curr_struct, 0, False, set(), moving_chain
-    
 
     # use the Superimposer
     sup = pdb.Superimposer()
@@ -414,7 +411,7 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, rec_
 
     # add to the fixed structure, the moved chain
     added = 0
-    clash, clashing_chains = is_Steric_clash(curr_struct, moving_chain)
+    clash, clashing_chains = is_steric_clash(curr_struct, moving_chain)
 
     # something is added if there's no clashes and the RMSD is very low, indicating that the two chains are actually the same
     if not clash and rms <= 3.0:
@@ -432,11 +429,10 @@ def superimpose_and_rotate(eq_chain1, eq_chain2, moving_chain, curr_struct, rec_
 
 def structure_in_created_structures(structure, created_structures):
 
-    """ This function asks if the structure (with many chains) is already in  created_structures (a list of structures). returning a boolean if so.
+    """Ask if structure is already in created_structures (a list of structures). Returns a boolean.
 
-    This is considered to be true if all of the chains in structure have a chain in one of the structures in created_structures that have an RMSD of 3.0 or less.
-
-    This is compared after superposing structure and one of the structures in created_structures by a common chain (below called )"""
+    Considerations:
+    Return True if all of the chains in structure are in one of the structures in created_structures and RMSD <= 3.0, meaning they are the same structure """
 
     # make a deepcopy of these objects
     structure = copy.deepcopy(structure)
@@ -533,16 +529,18 @@ def structure_in_created_structures(structure, created_structures):
 
 
 class TwoChainException(Exception):
+    """Subclass of Exception. Stop the execution if a template given does not have 2 chains."""
+
     def __init__(self, file):
         self.file = file
 
     def __str__(self):
-        return "Input file %s does not have 2 chains. We reccomend to remove it from the templates directory, as this pipeline requires templates to be PAIRWISE interactions." % self.file
+        return "Input file %s does not have 2 chains. Please remove it from the templates directory, as this pipeline requires templates to be PAIRWISE interactions." % self.file
 
 
 def print_topology_of_complex(structure):
 
-    """This function prints to STDOUT the topology of a structure"""
+    """Print the topology of a structure to STDOUT"""
 
     print('The current complex has %i chains, with the molecules:'%(len(list(structure.get_chains()))))
 
@@ -563,38 +561,29 @@ def print_topology_of_complex(structure):
 
 def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaustive, n_chains, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=list(), stoich=None, verbose=False):
 
-    """This function builds the complex. It has many recursion-opening possibilities, returning saved_models (a list of the currently saved models) in each of them.
+    """Build and return a protein complex.
 
-    current_str is the structure being built
+    It has many recursion-opening possibilities, returning saved_models (a list of the currently saved models) in each of them.
 
-    mydir contains the files with the template pairwise interactions
+    Keyword arguments:
+    current_str -- structure being built
+    mydir -- contains the files with the template pairwise interactions
+    PDB_dict -- dictionary with the information about the chain contents of each file
+    num_models -- desired number of different models to be generated
+    exhaustive -- boolean, indicates if all possible complexes have to be generated. This is dangerous and NOT recommended for large complexes.
+    this_is_a_branch -- boolean, indicates if the current function is running in a branch of complex building.
+    this_is_a_complex_recursion -- boolean, indicates if the current function is trying to add recursively new chains to the previosuly created model
+    non_brancheable_clashes -- set of tuples that correspond to clashes that should not open a branch
+    rec_level_branch -- recursion level of the branch opened
+    rec_level_complex -- recursion level in terms of adding new chains
+    tried_branch_structures -- structures that opened a branch
+    stoich -- dictionary with information about the expected stoichiometry of the complex
+    verbose -- boolean, indicates if the progression of the program has to be printed
 
-    PDB_dict is the dictionary with the information about the chain contents of each file
-
-    num_models is the desired number of different models to generate with this function
-
-    exhaustive is a boolean that indicates if all possible complexes have to be generated. This is dangerous for large complexes.
-
-    this_is_a_branch indicates if the current function is running in a branch of complex building.
-
-    this_is_a_complex_recursion indicates if the current function is trying to add recursively new chains to the model previosuly created
-
-    non_brancheable_clashes is a set of tuples that correspond to clashes that should not open a branch.
-
-    rec_level_branch indicates which is the level of the branch opened.
-
-    rec_level_complex indicates which is in which recursion level, in terms of adding new chains, is the current function.
-
-    tried_branch_structures indicates which are the structures that opened a branch.
-
-    stoich is a dictionary that includes information about the expected stoichiometry of the complex.
-
-    verbose is a boolean that indicates if the progression of the program has to be considered.
-
-    NOTE THAT if exhaustive is true,  stoich is provided or n_models exceeds 1 this function will open branches for building more than one complex."""
+    NOTE THAT if exhaustive is true, stoich is provided or n_models exceeds 1 this function will maybe open branches for building more than one complex."""
 
     # return as soon as possible:
-    if exhaustive is False and num_models==len(saved_models):
+    if exhaustive is False and num_models == len(saved_models):
         return saved_models
 
     # update the rec_level:

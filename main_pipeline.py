@@ -77,7 +77,7 @@ if options.input:
     if os.path.isfile(options.input):
 
         # when the input is a file you have to generate all the interacting pairs, rotated and translated
-        if options.input.split('.')[-1] == 'pdb' or  options.input.split('.')[-1] == 'ent':
+        if options.input.split('.')[-1] == 'pdb' or options.input.split('.')[-1] == 'ent':
             filetype = 'PDB'
         elif options.input.split('.')[-1] == 'cif':
             filetype = 'CIF'
@@ -87,11 +87,11 @@ if options.input:
         if options.verbose:
             print("Your input is a complex already. This is the program testing mode.\n Splitting input into pairwise subunits...")
 
-        Templates_dir = './TEMPLATES/'
-        func.Generate_pairwise_subunits_from_pdb(options.input, Templates_dir, filetype, options.verbose)
+        templates_dir = './templates/'
+        func.generate_pairwise_subunits_from_pdb(options.input, templates_dir, filetype, options.verbose)
 
     elif os.path.isdir(options.input):
-        Templates_dir = options.input
+        templates_dir = options.input
 
     else:
         raise Exception('You have to provide a valid input path')
@@ -103,7 +103,6 @@ if options.exhaustive:
           "This means that the program will undergo a tree-like recursive approach for building any possible complex with your input files, taking a long time for large structures.\n"
           "We recommend not to use this unless you did not succeed with any other options. \n"
           "If you suspect that different isoforms could result of your input we recommend to preset the number of isoforms expected (with the option n_models) and/or specify the desired stoichiometry (with option -sto).\n")
-
 
 
 # define the output, if it is not specified, then it is the default
@@ -146,14 +145,14 @@ else:
 number_subunits_file = './subunits_num.tbl'  # a file containing the number of subunits, if known
 
 
-# generate info about the Templates
+# generate info about the templates
 if options.verbose:
     print("Generating information about your input files ... ")
 
 # PDB_info information about the unique chains: Keys: filename, Values: [(chain accession , molecule identifier) ... ]
 # Seqs_info has the sequence id and sequence
 
-PDB_info, Seqs_info = func.Generate_PDB_info(Templates_dir, subunits_seq_file,options.verbose)
+PDB_info, Seqs_info = func.generate_PDB_info(templates_dir, subunits_seq_file, options.verbose)
 
 
 # initialise PDB files parser
@@ -163,7 +162,7 @@ p = pdb.PDBParser(PERMISSIVE=1)
 filename = random.choice(list(PDB_info.keys()))
 
 # we start with the structure of the first pairwise interaction, this is now the current model
-current_structure = p.get_structure("pr1", Templates_dir + filename)
+current_structure = p.get_structure("pr1", templates_dir + filename)
 
 if len(list(current_structure.get_chains())) != 2:
     raise func.TwoChainException(filename)
@@ -171,7 +170,7 @@ if len(list(current_structure.get_chains())) != 2:
 
 # change the chain id names
 for chain in current_structure.get_chains():
-    curr_id = chain.id # the so-called chain accession, usually a letter (A,B,C,D ...)
+    curr_id = chain.id  # the so-called chain accession, usually a letter (A,B,C,D ...)
     chain.id = [x for x in PDB_info[filename] if x[0] == curr_id][0]
 
 # NOTE: all the chains, but the initial 2, in the current_structure will have this naming for a proper working of the code:
@@ -184,8 +183,7 @@ if options.verbose:
 final_models = []
 
 # then we call the function 'build_complex'
-final_models = func.build_complex(final_models, current_structure, Templates_dir, PDB_info, options.n_models, options.exhaustive, options.n_chains, stoich=stoich_dict, verbose= options.verbose)
-
+final_models = func.build_complex(final_models, current_structure, templates_dir, PDB_info, options.n_models, options.exhaustive, options.n_chains, stoich=stoich_dict, verbose=options.verbose)
 
 if len(final_models) == 0:
     if options.stoich:
@@ -197,7 +195,7 @@ if len(final_models) == 0:
 for final_model in final_models:
 
     # if final model has more than 62 chains, split into different models
-    structure = func.pdb_struct.Structure('id') # empty structure:
+    structure = func.pdb_struct.Structure('id')  # empty structure:
 
     # create a new model for each group of 62 chains, and add to structure and change the id of the chains and record the info about which is the molecule of each chain
     chain_counter = 0
@@ -222,20 +220,18 @@ for final_model in final_models:
         chain_counter += 1
 
         if options.verbose:
-            print('printing chain: ',chain_counter ,chain.id)
+            print('printing chain: ', chain_counter, chain.id)
 
         # initialize model
-        if chain_counter==1:
+        if chain_counter == 1:
             model_counter += 1
             model = func.pdb_model.Model(model_counter)
-
 
         # add chain to the model
         model.add(chain)
 
-
         # reset counter and add model after 62 rounds
-        if chain_counter==len(func.chain_alphabet):
+        if chain_counter == len(func.chain_alphabet):
             chain_counter = 0
 
             model = copy.deepcopy(model)
@@ -244,7 +240,6 @@ for final_model in final_models:
             # remove the chains in the current model of  of the final_model, to avoid further problems with the id
             for chain_m in model.get_chains():
                 final_model[0].detach_child(chain_m.id)
-
 
     # add the last model:
     current_models_strcuture = [x.id for x in structure.get_models()]
@@ -259,22 +254,19 @@ for final_model in final_models:
         PDB_name = 'model_'+str(written_id)+'.pdb'
 
     if options.verbose:
-        print('%s created as a model for the complex structure.'%(PDB_name))
+        print('%s created as a model for the complex structure.' % PDB_name)
 
     # open the pdb and put information about what is each chain
     model_path = output + PDB_name
 
-
-    # WRITE the ATOM lines:
-    io = pdb.PDBIO() # using our own PDB writer
+    # Write the ATOM lines:
+    io = pdb.PDBIO()  # using our own PDB writer
     io.set_structure(structure)
     io.save(model_path)
 
     # write the info lines
-    fd = open(model_path,'a')
+    fd = open(model_path, 'a')
     fd.write('CHAIN HEADER    current id   molecule id    sequence\n')
     fd.write(legend)
     fd.write('\n')
     fd.close()
-
-
