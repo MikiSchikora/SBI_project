@@ -1,0 +1,192 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module Functions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>Functions</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Volumes/GoogleDrive/Mi%20unidad/MSc%202nd%20Term/SBI/SBI%20project/SBI_project/byc/Functions.py">/Volumes/GoogleDrive/Mi unidad/MSc 2nd Term/SBI/SBI project/SBI_project/byc/Functions.py</a></font></td></tr></table>
+    <p><tt>#&nbsp;This&nbsp;is&nbsp;a&nbsp;python&nbsp;module&nbsp;that&nbsp;includes&nbsp;the&nbsp;functions&nbsp;and&nbsp;classes&nbsp;used&nbsp;in&nbsp;the&nbsp;main_pipeline.py</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="Bio.SeqIO.html">Bio.SeqIO</a><br>
+<a href="copy.html">copy</a><br>
+<a href="itertools.html">itertools</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+<a href="os.html">os</a><br>
+<a href="Bio.pairwise2.html">Bio.pairwise2</a><br>
+</td><td width="25%" valign=top><a href="Bio.PDB.html">Bio.PDB</a><br>
+<a href="Bio.PDB.Model.html">Bio.PDB.Model</a><br>
+<a href="Bio.PDB.Structure.html">Bio.PDB.Structure</a><br>
+</td><td width="25%" valign=top><a href="random.html">random</a><br>
+<a href="rmsd.html">rmsd</a><br>
+<a href="string.html">string</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="builtins.html#Exception">builtins.Exception</a>(<a href="builtins.html#BaseException">builtins.BaseException</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="Functions.html#TwoChainException">TwoChainException</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TwoChainException">class <strong>TwoChainException</strong></a>(<a href="builtins.html#Exception">builtins.Exception</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Subclass&nbsp;of&nbsp;<a href="builtins.html#Exception">Exception</a>.&nbsp;Stop&nbsp;the&nbsp;execution&nbsp;if&nbsp;a&nbsp;template&nbsp;given&nbsp;does&nbsp;not&nbsp;have&nbsp;2&nbsp;chains.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="Functions.html#TwoChainException">TwoChainException</a></dd>
+<dd><a href="builtins.html#Exception">builtins.Exception</a></dd>
+<dd><a href="builtins.html#BaseException">builtins.BaseException</a></dd>
+<dd><a href="builtins.html#object">builtins.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="TwoChainException-__init__"><strong>__init__</strong></a>(self, file)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="TwoChainException-__str__"><strong>__str__</strong></a>(self)</dt><dd><tt>Return&nbsp;str(self).</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from <a href="builtins.html#Exception">builtins.Exception</a>:<br>
+<dl><dt><a name="TwoChainException-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;object.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="builtins.html#BaseException">builtins.BaseException</a>:<br>
+<dl><dt><a name="TwoChainException-__delattr__"><strong>__delattr__</strong></a>(self, name, /)</dt><dd><tt>Implement&nbsp;delattr(self,&nbsp;name).</tt></dd></dl>
+
+<dl><dt><a name="TwoChainException-__getattribute__"><strong>__getattribute__</strong></a>(self, name, /)</dt><dd><tt>Return&nbsp;getattr(self,&nbsp;name).</tt></dd></dl>
+
+<dl><dt><a name="TwoChainException-__reduce__"><strong>__reduce__</strong></a>(...)</dt><dd><tt>helper&nbsp;for&nbsp;pickle</tt></dd></dl>
+
+<dl><dt><a name="TwoChainException-__repr__"><strong>__repr__</strong></a>(self, /)</dt><dd><tt>Return&nbsp;repr(self).</tt></dd></dl>
+
+<dl><dt><a name="TwoChainException-__setattr__"><strong>__setattr__</strong></a>(self, name, value, /)</dt><dd><tt>Implement&nbsp;setattr(self,&nbsp;name,&nbsp;value).</tt></dd></dl>
+
+<dl><dt><a name="TwoChainException-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="TwoChainException-with_traceback"><strong>with_traceback</strong></a>(...)</dt><dd><tt><a href="builtins.html#Exception">Exception</a>.<a href="#TwoChainException-with_traceback">with_traceback</a>(tb)&nbsp;--<br>
+set&nbsp;self.<strong>__traceback__</strong>&nbsp;to&nbsp;tb&nbsp;and&nbsp;return&nbsp;self.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="builtins.html#BaseException">builtins.BaseException</a>:<br>
+<dl><dt><strong>__cause__</strong></dt>
+<dd><tt>exception&nbsp;cause</tt></dd>
+</dl>
+<dl><dt><strong>__context__</strong></dt>
+<dd><tt>exception&nbsp;context</tt></dd>
+</dl>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>__suppress_context__</strong></dt>
+</dl>
+<dl><dt><strong>__traceback__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-build_complex"><strong>build_complex</strong></a>(saved_models, current_str, mydir, PDB_dict, num_models, exhaustive, n_chains, this_is_a_branch=False, this_is_a_complex_recursion=False, non_brancheable_clashes=set(), rec_level_branch=0, rec_level_complex=0, tried_branch_structures=[], stoich=None, verbose=False)</dt><dd><tt>Build&nbsp;and&nbsp;return&nbsp;a&nbsp;protein&nbsp;complex.<br>
+&nbsp;<br>
+It&nbsp;has&nbsp;many&nbsp;recursion-opening&nbsp;possibilities,&nbsp;returning&nbsp;saved_models&nbsp;(a&nbsp;list&nbsp;of&nbsp;the&nbsp;currently&nbsp;saved&nbsp;models)&nbsp;in&nbsp;each&nbsp;of&nbsp;them.<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+current_str&nbsp;--&nbsp;structure&nbsp;being&nbsp;built<br>
+mydir&nbsp;--&nbsp;contains&nbsp;the&nbsp;files&nbsp;with&nbsp;the&nbsp;template&nbsp;pairwise&nbsp;interactions<br>
+PDB_dict&nbsp;--&nbsp;dictionary&nbsp;with&nbsp;the&nbsp;information&nbsp;about&nbsp;the&nbsp;chain&nbsp;contents&nbsp;of&nbsp;each&nbsp;file<br>
+num_models&nbsp;--&nbsp;desired&nbsp;number&nbsp;of&nbsp;different&nbsp;models&nbsp;to&nbsp;be&nbsp;generated<br>
+exhaustive&nbsp;--&nbsp;boolean,&nbsp;indicates&nbsp;if&nbsp;all&nbsp;possible&nbsp;complexes&nbsp;have&nbsp;to&nbsp;be&nbsp;generated.&nbsp;This&nbsp;is&nbsp;dangerous&nbsp;and&nbsp;NOT&nbsp;recommended&nbsp;for&nbsp;large&nbsp;complexes.<br>
+this_is_a_branch&nbsp;--&nbsp;boolean,&nbsp;indicates&nbsp;if&nbsp;the&nbsp;current&nbsp;function&nbsp;is&nbsp;running&nbsp;in&nbsp;a&nbsp;branch&nbsp;of&nbsp;complex&nbsp;building.<br>
+this_is_a_complex_recursion&nbsp;--&nbsp;boolean,&nbsp;indicates&nbsp;if&nbsp;the&nbsp;current&nbsp;function&nbsp;is&nbsp;trying&nbsp;to&nbsp;add&nbsp;recursively&nbsp;new&nbsp;chains&nbsp;to&nbsp;the&nbsp;previosuly&nbsp;created&nbsp;model<br>
+non_brancheable_clashes&nbsp;--&nbsp;set&nbsp;of&nbsp;tuples&nbsp;that&nbsp;correspond&nbsp;to&nbsp;clashes&nbsp;that&nbsp;should&nbsp;not&nbsp;open&nbsp;a&nbsp;branch<br>
+rec_level_branch&nbsp;--&nbsp;recursion&nbsp;level&nbsp;of&nbsp;the&nbsp;branch&nbsp;opened<br>
+rec_level_complex&nbsp;--&nbsp;recursion&nbsp;level&nbsp;in&nbsp;terms&nbsp;of&nbsp;adding&nbsp;new&nbsp;chains<br>
+tried_branch_structures&nbsp;--&nbsp;structures&nbsp;that&nbsp;opened&nbsp;a&nbsp;branch<br>
+stoich&nbsp;--&nbsp;dictionary&nbsp;with&nbsp;information&nbsp;about&nbsp;the&nbsp;expected&nbsp;stoichiometry&nbsp;of&nbsp;the&nbsp;complex<br>
+verbose&nbsp;--&nbsp;boolean,&nbsp;indicates&nbsp;if&nbsp;the&nbsp;progression&nbsp;of&nbsp;the&nbsp;program&nbsp;has&nbsp;to&nbsp;be&nbsp;printed<br>
+&nbsp;<br>
+NOTE&nbsp;THAT&nbsp;if&nbsp;exhaustive&nbsp;is&nbsp;true,&nbsp;stoich&nbsp;is&nbsp;provided&nbsp;or&nbsp;n_models&nbsp;exceeds&nbsp;1&nbsp;this&nbsp;function&nbsp;will&nbsp;maybe&nbsp;open&nbsp;branches&nbsp;for&nbsp;building&nbsp;more&nbsp;than&nbsp;one&nbsp;complex.</tt></dd></dl>
+ <dl><dt><a name="-create_id_and_add_string_to_dict"><strong>create_id_and_add_string_to_dict</strong></a>(string, dict, n)</dt><dd><tt>Add&nbsp;an&nbsp;identifier&nbsp;of&nbsp;n&nbsp;random&nbsp;characters&nbsp;as&nbsp;a&nbsp;key&nbsp;of&nbsp;dictionary&nbsp;and&nbsp;a&nbsp;string&nbsp;as&nbsp;value&nbsp;and&nbsp;return&nbsp;them.</tt></dd></dl>
+ <dl><dt><a name="-create_random_chars_id"><strong>create_random_chars_id</strong></a>(n)</dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;an&nbsp;identifier&nbsp;with&nbsp;n&nbsp;ASCII&nbsp;uppercase&nbsp;random&nbsp;characters.</tt></dd></dl>
+ <dl><dt><a name="-generate_PDB_info"><strong>generate_PDB_info</strong></a>(templates_dir, subunits_seq_file, verbose, min_identity_between_chains=95)</dt><dd><tt>Take&nbsp;a&nbsp;directory&nbsp;of&nbsp;templates,&nbsp;create&nbsp;and&nbsp;return&nbsp;a&nbsp;dictionary&nbsp;with&nbsp;information&nbsp;about&nbsp;each&nbsp;template&nbsp;file.<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+templates_dir&nbsp;--&nbsp;directory&nbsp;with&nbsp;PDB&nbsp;pairwise&nbsp;interactions&nbsp;files<br>
+subunits_seq_file&nbsp;--&nbsp;FASTA&nbsp;file&nbsp;containing&nbsp;the&nbsp;sequences&nbsp;of&nbsp;all&nbsp;the&nbsp;molecules&nbsp;that&nbsp;form&nbsp;the&nbsp;complex<br>
+min_identity_between_chains&nbsp;--&nbsp;minimum&nbsp;identity&nbsp;required&nbsp;between&nbsp;2&nbsp;molecules&nbsp;to&nbsp;be&nbsp;classified&nbsp;as&nbsp;the&nbsp;same.&nbsp;Default&nbsp;=&nbsp;95%<br>
+&nbsp;<br>
+Incorporate&nbsp;each&nbsp;template&nbsp;file&nbsp;into&nbsp;a&nbsp;key&nbsp;in&nbsp;a&nbsp;dictionary&nbsp;with&nbsp;list&nbsp;with&nbsp;2&nbsp;unique&nbsp;identifiers&nbsp;for&nbsp;its&nbsp;chains&nbsp;as&nbsp;value</tt></dd></dl>
+ <dl><dt><a name="-generate_pairwise_subunits_from_pdb"><strong>generate_pairwise_subunits_from_pdb</strong></a>(pdb_file_path, templates_path, file_type, verbose)</dt><dd><tt>Take&nbsp;an&nbsp;existing&nbsp;complex&nbsp;and&nbsp;fragment&nbsp;it&nbsp;into&nbsp;each&nbsp;of&nbsp;the&nbsp;pairwise&nbsp;interactions&nbsp;between&nbsp;subunits.<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+pdb_file_path&nbsp;--&nbsp;path&nbsp;where&nbsp;the&nbsp;complex&nbsp;PDB&nbsp;is<br>
+templates_path&nbsp;--&nbsp;folder&nbsp;where&nbsp;the&nbsp;resulting&nbsp;folders&nbsp;will&nbsp;be&nbsp;saved<br>
+file_type&nbsp;--&nbsp;type&nbsp;of&nbsp;file<br>
+verbose&nbsp;--&nbsp;if&nbsp;a&nbsp;log&nbsp;of&nbsp;the&nbsp;program&nbsp;execution&nbsp;is&nbsp;saved<br>
+&nbsp;<br>
+Considerations:<br>
+Does&nbsp;not&nbsp;consider&nbsp;nucleic&nbsp;acid&nbsp;sequences,&nbsp;it&nbsp;is&nbsp;only&nbsp;for&nbsp;testing&nbsp;the&nbsp;program&nbsp;on&nbsp;different&nbsp;complexes</tt></dd></dl>
+ <dl><dt><a name="-get_atom_list_from_res_list"><strong>get_atom_list_from_res_list</strong></a>(reslist)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;CA&nbsp;or&nbsp;P&nbsp;atom&nbsp;objects&nbsp;from&nbsp;a&nbsp;list&nbsp;of&nbsp;residue&nbsp;objects</tt></dd></dl>
+ <dl><dt><a name="-get_list_of_common_res"><strong>get_list_of_common_res</strong></a>(reslist1, reslist2)</dt><dd><tt>Take&nbsp;2&nbsp;lists&nbsp;of&nbsp;residues&nbsp;and&nbsp;return&nbsp;a&nbsp;list&nbsp;of&nbsp;common&nbsp;residues&nbsp;(equal&nbsp;number)</tt></dd></dl>
+ <dl><dt><a name="-is_steric_clash"><strong>is_steric_clash</strong></a>(structure, rotating_chain, distance_for_clash=2.5)</dt><dd><tt>Check&nbsp;if&nbsp;there&nbsp;is&nbsp;a&nbsp;steric&nbsp;clash&nbsp;between&nbsp;a&nbsp;rotating&nbsp;chain&nbsp;and&nbsp;current&nbsp;structure.&nbsp;Return&nbsp;False&nbsp;(no&nbsp;clash),&nbsp;1&nbsp;(clash&nbsp;between&nbsp;two&nbsp;different&nbsp;chains)&nbsp;or&nbsp;2&nbsp;(same&nbsp;chain).&nbsp;Also&nbsp;returns&nbsp;the&nbsp;ids&nbsp;of&nbsp;the&nbsp;chains&nbsp;in&nbsp;structure&nbsp;that&nbsp;are&nbsp;clashing<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+structure&nbsp;--&nbsp;whole&nbsp;structure<br>
+rotating_chain&nbsp;--&nbsp;chain&nbsp;to&nbsp;be&nbsp;analyzed&nbsp;with&nbsp;respect&nbsp;to&nbsp;structure<br>
+distance_for_clash&nbsp;--&nbsp;threshold&nbsp;to&nbsp;consider&nbsp;clash&nbsp;between&nbsp;atoms.&nbsp;Default&nbsp;=&nbsp;2.5&nbsp;(Armstrongs)<br>
+&nbsp;<br>
+Clash&nbsp;criteria:&nbsp;at&nbsp;least&nbsp;20&nbsp;of&nbsp;the&nbsp;atoms&nbsp;are&nbsp;at&nbsp;a&nbsp;lower&nbsp;distance&nbsp;than&nbsp;distance_for_clash<br>
+Same&nbsp;chain&nbsp;criteria:&nbsp;RMSD&nbsp;between&nbsp;them&nbsp;&lt;=&nbsp;3.0</tt></dd></dl>
+ <dl><dt><a name="-print_topology_of_complex"><strong>print_topology_of_complex</strong></a>(structure)</dt><dd><tt>Print&nbsp;the&nbsp;topology&nbsp;of&nbsp;a&nbsp;structure&nbsp;to&nbsp;STDOUT</tt></dd></dl>
+ <dl><dt><a name="-structure_in_created_structures"><strong>structure_in_created_structures</strong></a>(structure, created_structures)</dt><dd><tt>Ask&nbsp;if&nbsp;structure&nbsp;is&nbsp;already&nbsp;in&nbsp;created_structures&nbsp;(a&nbsp;list&nbsp;of&nbsp;structures).&nbsp;Returns&nbsp;a&nbsp;boolean.<br>
+&nbsp;<br>
+Considerations:<br>
+Return&nbsp;True&nbsp;if&nbsp;all&nbsp;of&nbsp;the&nbsp;chains&nbsp;in&nbsp;structure&nbsp;are&nbsp;in&nbsp;one&nbsp;of&nbsp;the&nbsp;structures&nbsp;in&nbsp;created_structures&nbsp;and&nbsp;RMSD&nbsp;&lt;=&nbsp;3.0,&nbsp;meaning&nbsp;they&nbsp;are&nbsp;the&nbsp;same&nbsp;structure</tt></dd></dl>
+ <dl><dt><a name="-superimpose_and_rotate"><strong>superimpose_and_rotate</strong></a>(eq_chain1, eq_chain2, moving_chain, curr_struct, rec_level_complex)</dt><dd><tt>Superimpose&nbsp;2&nbsp;chains&nbsp;and&nbsp;add&nbsp;another&nbsp;with&nbsp;the&nbsp;rotation&nbsp;parameters&nbsp;obtained.&nbsp;Return&nbsp;structure&nbsp;object&nbsp;with&nbsp;added&nbsp;chain,&nbsp;information&nbsp;about&nbsp;clashes&nbsp;and&nbsp;a&nbsp;flag&nbsp;for&nbsp;having&nbsp;added&nbsp;something.<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+eq_chain1&nbsp;--&nbsp;common&nbsp;chain&nbsp;in&nbsp;the&nbsp;current&nbsp;structure&nbsp;(curr_struct)<br>
+eq_chain2&nbsp;--&nbsp;common&nbsp;chain&nbsp;in&nbsp;the&nbsp;structure&nbsp;from&nbsp;which&nbsp;a&nbsp;chain&nbsp;wants&nbsp;to&nbsp;be&nbsp;added&nbsp;(moving_chain)<br>
+moving_chain&nbsp;--&nbsp;chain&nbsp;that&nbsp;may&nbsp;be&nbsp;added&nbsp;to&nbsp;the&nbsp;current&nbsp;complex<br>
+rec_level_complex&nbsp;--&nbsp;recursion&nbsp;level&nbsp;of&nbsp;building&nbsp;the&nbsp;complex<br>
+filename2&nbsp;--&nbsp;name&nbsp;of&nbsp;the&nbsp;file&nbsp;that&nbsp;contains&nbsp;the&nbsp;moving_chain</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>chain_alphabet</strong> = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', ...]<br>
+<strong>complete_chain_alphabet</strong> = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', ...]<br>
+<strong>repeat2</strong> = ['AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', ...]<br>
+<strong>repeat3</strong> = ['AAA', 'AAB', 'AAC', 'AAD', 'AAE', 'AAF', 'AAG', 'AAH', 'AAI', 'AAJ', 'AAK', 'AAL', 'AAM', 'AAN', 'AAO', 'AAP', 'AAQ', 'AAR', 'AAS', 'AAT', ...]</td></tr></table>
+</body></html>
