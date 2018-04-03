@@ -3,12 +3,12 @@
 # import modules
 import os
 import sys
+sys.path.append(os.curdir)
 import Functions as func
 import Bio.PDB as pdb
 import argparse
 import random
 import copy
-sys.path.append(os.curdir)
 
 # parse arguments
 parser = argparse.ArgumentParser(description="This program builds a complex from the given interacting pairwise subunits")
@@ -83,7 +83,7 @@ if options.input:
         if options.verbose:
             print("Your input is a complex already. This is the program testing mode.\n Splitting input into pairwise subunits...")
 
-        templates_dir = './templates/'
+        templates_dir = './TEMPLATES_new/'
         # generate all the interacting pairs, rotated and translated
         func.generate_pairwise_subunits_from_pdb(options.input, templates_dir, filetype, options.verbose)
 
@@ -233,7 +233,7 @@ for final_model in final_models:
         if chain_counter == len(func.chain_alphabet):
             chain_counter = 0
 
-            model = copy.deepcopy(model)
+            model = model.copy()
             structure.add(model)
 
             # remove the chains in the current model of  of the final_model, to avoid further problems with the id

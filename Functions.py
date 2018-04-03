@@ -122,8 +122,8 @@ def generate_pairwise_subunits_from_pdb(pdb_file_path, templates_path, file_type
                     new_structure = pdb_struct.Structure(ID)
 
                     new_model = pdb_model.Model(0)
-                    new_model.add(copy.deepcopy(chain1))
-                    new_model.add(copy.deepcopy(chain2))
+                    new_model.add(chain1.copy())
+                    new_model.add(chain2.copy())
 
                     new_structure.add(new_model)
 
@@ -134,11 +134,10 @@ def generate_pairwise_subunits_from_pdb(pdb_file_path, templates_path, file_type
                         atom.transform(rotation, translation)
 
                     # write to new pdb:
-
                     if structure_in_created_structures(new_structure, saved_structures) is False:
 
                         # record as a saved structure:
-                        saved_structures.append(new_structure)
+                        saved_structures.append(new_structure.copy())
 
                         # give unique chains to a structure (A and B)
                         id_nch = 0
@@ -271,16 +270,16 @@ def generate_PDB_info(templates_dir, subunits_seq_file, verbose, min_identity_be
     return PDB_info, Seqs
 
 
-def is_steric_clash(structure, rotating_chain, distance_for_clash=1.4):
+def is_steric_clash(structure, rotating_chain, distance_for_clash=2.5):
 
     """Check if there is a steric clash between a rotating chain and current structure. Return False (no clash), 1 (clash between two different chains) or 2 (same chain). Also returns the ids of the chains in structure that are clashing
 
     Keyword arguments:
     structure -- whole structure
     rotating_chain -- chain to be analyzed with respect to structure
-    distance_for_clash -- threshold to consider clash between atoms. Default = 1.4 (Armstrongs)
+    distance_for_clash -- threshold to consider clash between atoms. Default = 2.5 (Armstrongs)
 
-    Clash criteria: at least 10 of the atoms are at a lower distance than distance_for_clash
+    Clash criteria: at least 20 of the atoms are at a lower distance than distance_for_clash
     Same chain criteria: RMSD between them <= 3.0 """
 
     # initialize the neighbor search
@@ -296,10 +295,11 @@ def is_steric_clash(structure, rotating_chain, distance_for_clash=1.4):
             for neigh in neighbors:
                 clashing_chains.add(neigh.get_parent().get_parent().id)
                 n_clashes += 1
-
+    
     if len(clashing_chains) > 1 and n_clashes > 20:
         # a clash against different chains:
         val_to_return = 1
+    
 
     elif len(clashing_chains) == 1 and n_clashes > 20 and rotating_chain.id[1] == list(clashing_chains)[0][1]:
 
@@ -433,8 +433,8 @@ def structure_in_created_structures(structure, created_structures):
     Return True if all of the chains in structure are in one of the structures in created_structures and RMSD <= 3.0, meaning they are the same structure """
 
     # make a deepcopy of these objects
-    structure = copy.deepcopy(structure)
-    created_structures = copy.deepcopy(created_structures)
+    structure = structure.copy()
+    created_structures = created_structures.copy()
 
     # Get the ids of the chains in structure
     chain_ids_structure = tuple(sorted([x.id[1] for x in structure.get_chains()]))
@@ -691,8 +691,8 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
 
                     # define each of the rotating/common, without perturbing the original ones
                     if len(rotating_chains) > 1:
-                        rotating_chain = copy.deepcopy(rotating_chains[I])
-                        common_chain2 = copy.deepcopy(common_chains2[I])
+                        rotating_chain = rotating_chains[I].copy()
+                        common_chain2 = common_chains2[I].copy()
                     else:
                         rotating_chain = rotating_chains[I]
                         common_chain2 = common_chains2[I]
@@ -727,11 +727,11 @@ def build_complex(saved_models, current_str, mydir, PDB_dict, num_models, exhaus
                         if open_branch:
 
                             # set the id of the chain you were trying to add:
-                            added_chain = copy.deepcopy(added_chain)
+                            added_chain = added_chain.copy()
                             added_chain.id = tuple(list(added_chain.id) + [create_random_chars_id(6), str(rec_level_complex)])
 
                             # make a new branch:
-                            branch_new_str = copy.deepcopy(current_str)
+                            branch_new_str = current_str.copy()
 
                             # remove the chains that chains that are clashing:
                             for clashing_chain in clashing_chains:
