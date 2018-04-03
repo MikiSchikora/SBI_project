@@ -318,7 +318,11 @@ def is_steric_clash(structure, rotating_chain, distance_for_clash=2.5):
         common_atoms_s1 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_s1)])
         common_atoms_s2 = np.array([list(x.get_coord()) for x in get_atom_list_from_res_list(common_res_s2)])
 
-        RMSD = rmsd.kabsch_rmsd(common_atoms_s1, common_atoms_s2)
+        # debug the atoms provided
+        if len(common_atoms_s1)==len(common_atoms_s2):
+            RMSD = rmsd.kabsch_rmsd(common_atoms_s1, common_atoms_s2)
+        else:
+        	RMSD = 1000 # like being different
 
         if RMSD <= 3.0:
             # it is the same chain

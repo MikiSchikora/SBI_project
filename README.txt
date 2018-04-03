@@ -33,6 +33,8 @@ Other application requirements (python modules and packages):
 
 - python sys
 
+######### INSTALLATION #########
+
 
 
 ######### USAGE #########
