@@ -40,7 +40,6 @@ We provide BYC.gz, which includes all the documentation and code for installing 
 For installation, unzip BYC.gz and, within the BIC/ directory type:
 
 	python3 setup.py install
-	python3 setup.py build
 
 Then you can run scripts of this application with:
 
